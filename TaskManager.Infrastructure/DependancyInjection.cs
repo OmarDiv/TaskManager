@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -45,6 +45,9 @@ namespace TaskManager.Infrastructure
             services.AddScoped<IApplicationDbContext>(provider =>
                            provider.GetRequiredService<ApplicationDbContext>());
 
+            services.AddScoped(typeof(IGenericRepository<>), typeof(Persistence.Repositories.GenericRepository<>));
+            services.AddScoped<IUnitOfWork, Persistence.Repositories.UnitOfWork>();
+
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IRoleService, RoleService>();
             services.AddSingleton<ICacheService, CacheService>();
@@ -77,15 +80,12 @@ namespace TaskManager.Infrastructure
             {
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = setting!.Issuer,
-                    ValidAudience = setting.Audience,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(setting!.Key))
-                }
-                ;
+                };
             });
             services.Configure<IdentityOptions>(
                 options =>

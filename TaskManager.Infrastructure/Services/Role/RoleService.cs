@@ -2,6 +2,7 @@ using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using TaskManager.Application.Common.Authentication;
 using TaskManager.Application.Common.Types;
 using TaskManager.Application.Feature.Roles.Commands.AddRole;
 using TaskManager.Application.Feature.Roles.Errors;
