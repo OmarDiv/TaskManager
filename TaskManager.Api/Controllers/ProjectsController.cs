@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using TaskManager.Api.DTOs.Projects;
 using TaskManager.Api.Extention;
 using TaskManager.Application.Common.Types;
 using TaskManager.Application.Feature.Projects.Commands.CreateProject;
@@ -70,7 +71,4 @@ namespace TaskManager.Api.Controllers
             return result.AsNoContentResult();
         }
     }
-
-    public record CreateProjectDto(string Name, string Description);
-    public record UpdateProjectDto(string Name, string Description);
 }

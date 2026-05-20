@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TaskManager.Api.DTOs.Tasks;
 using TaskManager.Api.Extention;
 using TaskManager.Application.Common.Types;
 using TaskManager.Application.Feature.Tasks.Commands.CreateTask;
@@ -65,15 +66,4 @@ namespace TaskManager.Api.Controllers
             return result.AsNoContentResult();
         }
     }
-
-    public record CreateTaskDto(
-        string Title,
-        string Description,
-        Status Status,
-        DateTime? DueDate,
-        Priority Priority,
-        long ProjectId
-    );
-
-    public record UpdateTaskStatusDto(Status Status);
 }
