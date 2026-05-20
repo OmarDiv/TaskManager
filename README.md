@@ -1,6 +1,6 @@
 # TaskManager - Project & Task Management API
 
-A production-grade, highly scalable backend system for managing Projects and Tasks, designed using **Clean Architecture** and **Domain-Driven Design (DDD)** patterns.
+A production-grade, highly scalable backend system for managing Projects and Tasks, designed using **Clean Architecture** and **Command Query Responsibility Segregation (CQRS)** patterns.
 
 ---
 
