@@ -1,0 +1,292 @@
+{
+	"info": {
+		"_postman_id": "docker-taskmanager-api",
+		"name": "TaskManager API (Docker)",
+		"description": "Full Postman collection for TaskManager API running on Docker (Port 5000).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"P@ssword123\",\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"gender\": 1\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/api/Auth/Register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "Auth", "Register"]
+						}
+					}
+				},
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if(jsonData.isSuccess && jsonData.value.token){",
+									"    pm.collectionVariables.set(\"token\", jsonData.value.token);",
+									"    pm.collectionVariables.set(\"refreshToken\", jsonData.value.refreshToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@taskmanager.com\",\n    \"password\": \"P@ssword123\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/api/Auth/Login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "Auth", "Login"]
+						}
+					}
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"{{token}}\",\n    \"refreshToken\": \"{{refreshToken}}\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/api/Auth/Refresh",
+							"host": ["{{base_url}}"],
+							"path": ["api", "Auth", "Refresh"]
+						}
+					}
+				},
+				{
+					"name": "Revoke Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"{{refreshToken}}\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/api/Auth/Revoke",
+							"host": ["{{base_url}}"],
+							"path": ["api", "Auth", "Revoke"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Projects",
+			"item": [
+				{
+					"name": "Create Project",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"My New Project\",\n    \"description\": \"A project to track development tasks\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/api/Projects",
+							"host": ["{{base_url}}"],
+							"path": ["api", "Projects"]
+						}
+					}
+				},
+				{
+					"name": "Get All Projects",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+						],
+						"url": {
+							"raw": "{{base_url}}/api/Projects",
+							"host": ["{{base_url}}"],
+							"path": ["api", "Projects"]
+						}
+					}
+				},
+				{
+					"name": "Get Project By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+						],
+						"url": {
+							"raw": "{{base_url}}/api/Projects/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "Projects", "1"]
+						}
+					}
+				},
+				{
+					"name": "Update Project",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Project Name\",\n    \"description\": \"Updated Description\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/api/Projects/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "Projects", "1"]
+						}
+					}
+				},
+				{
+					"name": "Delete Project",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+						],
+						"url": {
+							"raw": "{{base_url}}/api/Projects/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "Projects", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Tasks",
+			"item": [
+				{
+					"name": "Create Task",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"projectId\": 1,\n    \"title\": \"Implement Auth\",\n    \"description\": \"Setup JWT and Identity\",\n    \"status\": 1,\n    \"priority\": 3,\n    \"dueDate\": \"2026-12-31\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/api/Tasks",
+							"host": ["{{base_url}}"],
+							"path": ["api", "Tasks"]
+						}
+					}
+				},
+				{
+					"name": "Get Tasks By Project",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+						],
+						"url": {
+							"raw": "{{base_url}}/api/Tasks/project/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "Tasks", "project", "1"]
+						}
+					}
+				},
+				{
+					"name": "Update Task Status",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": 2\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/api/Tasks/1/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "Tasks", "1", "status"]
+						}
+					}
+				},
+				{
+					"name": "Delete Task",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+						],
+						"url": {
+							"raw": "{{base_url}}/api/Tasks/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "Tasks", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Roles (Admin Only)",
+			"item": [
+				{
+					"name": "Get All Roles",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+						],
+						"url": {
+							"raw": "{{base_url}}/api/Roles",
+							"host": ["{{base_url}}"],
+							"path": ["api", "Roles"]
+						}
+					}
+				},
+				{
+					"name": "Get Role By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+						],
+						"url": {
+							"raw": "{{base_url}}/api/Roles/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "Roles", "1"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{ "key": "base_url", "value": "http://localhost:5000", "type": "string" },
+		{ "key": "token", "value": "", "type": "string" },
+		{ "key": "refreshToken", "value": "", "type": "string" }
+	]
+}

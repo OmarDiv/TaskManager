@@ -5,9 +5,10 @@
     <Project Path="TaskManager.Domain/TaskManager.Domain.csproj" />
     <Project Path="TaskManager.Infrastructure/TaskManager.Infrastructure.csproj" />
   </Folder>
-  <File Path="README.md" />
-  <File Path="TaskManager_Postman_Collection.json" />
   <Project Path="docker-compose.dcproj">
     <Build />
   </Project>
+  <File Path="README.md" />
+  <File Path="TaskManager_Docker_Postman.json" />
+  <File Path="TaskManager_Local_Postman.json" />
 </Solution>

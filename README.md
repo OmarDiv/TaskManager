@@ -48,9 +48,7 @@ graph TD
 ### 4. Presentation Layer (`TaskManager.Api`)
 - RESTful API Controllers.
 - Swagger UI with built-in JWT authorization support.
-- Global Exception Handler: Intercepts exceptions globally and returns structured, standardized responses.
-
-- [x] **API Versioning**: URL-based versioning structure prepared (commented hint in Postman collection).
+- [x] **Global Exception Handler**: Intercepts exceptions globally and returns structured, standardized responses.
 
 ---
 
@@ -125,9 +123,10 @@ If you prefer running the project on your local machine without Docker:
 2. **Authorize**:
    - Call `POST /api/Auth/Login` to get the JWT.
    - Use the **Authorize** button in Swagger to paste the token.
-3. **Postman**: A pre-configured [TaskManager_Postman_Collection.json](file:///d:/C__/Hiring-Tasks/TaskManager/TaskManager_Postman_Collection.json) is available in the root folder.
-   - **Docker Port**: `http://localhost:5000` (Default in Collection).
-   - **Local Port**: `http://localhost:5156` (If running without Docker, simply update the `baseUrl` variable in Postman).
+3. **Postman Collections**: Pre-configured collections are available in the root folder:
+   - [TaskManager_Docker_Postman.json](file:///d:/C__/Hiring-Tasks/TaskManager/TaskManager_Docker_Postman.json): Configured for Docker environment (`http://localhost:5000`).
+   - [TaskManager_Local_Postman.json](file:///d:/C__/Hiring-Tasks/TaskManager/TaskManager_Local_Postman.json): Configured for Local execution (`https://localhost:7138`).
+   - Both collections include automatic token management after login.
 
 ---
 
