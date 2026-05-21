@@ -1,18 +1,18 @@
-﻿using FluentValidation;
+using Bogus.DataSets;
+using FluentValidation;
 using MediatR;
 using System.Threading;
 using System.Threading.Tasks;
 using TaskManager.Application.Common.Interfaces.Persistence;
 using TaskManager.Application.Common.Interfaces.Repositories;
 using TaskManager.Application.Common.Interfaces.Services;
-using TaskManager.Application.Common.Types;
 using TaskManager.Application.Feature.Projects.Errors;
 using TaskManager.Application.Feature.Projects.Responses;
-using TaskManager.Domain.Entities;
 
 namespace TaskManager.Application.Feature.Projects.Commands.CreateProject
 {
-    public record CreateProject(string Name, string Description, long CreatedById) : IRequest<Result<ProjectResponse>>;
+    public record CreateProject(
+        string Name, string Description, long CreatedById) : IRequest<Result<ProjectResponse>>;
 
     public class CreateProjectHandler(
         IGenericRepository<Project> _projectRepository,
@@ -23,7 +23,7 @@ namespace TaskManager.Application.Feature.Projects.Commands.CreateProject
         public async Task<Result<ProjectResponse>> Handle(CreateProject request, CancellationToken cancellationToken)
         {
             var exists = await _projectRepository.IsExist(
-                p => p.CreatedById == request.CreatedById && p.Name.Equals(request.Name, StringComparison.CurrentCultureIgnoreCase),
+                p => p.CreatedById == request.CreatedById && p.Name.ToLower() == request.Name.ToLower(),
                 cancellationToken
             );
             //"الجزء ده كله المفروض يكون في Fluent Validation لكن قولت محاولتش اصعب الامور"

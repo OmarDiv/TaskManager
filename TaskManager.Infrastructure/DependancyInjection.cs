@@ -58,7 +58,13 @@ namespace TaskManager.Infrastructure
         {
             var connectionString = configuration.GetConnectionString("DefaultConnection");
             services.AddDbContext<ApplicationDbContext>(options =>
-                 options.UseSqlServer(connectionString));
+                 options.UseSqlServer(connectionString, sqlOptions =>
+                 {
+                     sqlOptions.EnableRetryOnFailure(
+                         maxRetryCount: 5,
+                         maxRetryDelay: TimeSpan.FromSeconds(30),
+                         errorNumbersToAdd: null);
+                 }));
 
             return services;
         }
@@ -91,7 +97,7 @@ namespace TaskManager.Infrastructure
                 options =>
                 {
                     options.Password.RequiredLength = 8;
-                    options.SignIn.RequireConfirmedEmail = true;
+                    options.SignIn.RequireConfirmedEmail = false;
                     options.User.RequireUniqueEmail = true;
                 }
                 );

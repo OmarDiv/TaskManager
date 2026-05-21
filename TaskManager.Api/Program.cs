@@ -1,6 +1,8 @@
+using Microsoft.EntityFrameworkCore;
 using TaskManager.Api;
 using TaskManager.Application;
 using TaskManager.Infrastructure;
+using TaskManager.Infrastructure.Persistence.Context;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,18 +14,32 @@ builder.Services
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
-app.UseExceptionHandler();
-if (app.Environment.IsDevelopment())
+
+// Automatic Migration for Docker environment
+using (var scope = app.Services.CreateScope())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        if (context.Database.GetPendingMigrations().Any())
+        {
+            context.Database.Migrate();
+        }
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
 }
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+app.UseExceptionHandler();
+
+// Enable Swagger in Production for evaluation purposes
+app.UseSwagger();
+app.UseSwaggerUI();
+
 app.UseRouting();
 app.UseHttpsRedirection();
 app.UseAuthentication();

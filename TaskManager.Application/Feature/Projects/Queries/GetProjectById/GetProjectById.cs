@@ -6,7 +6,6 @@ using TaskManager.Application.Common.Interfaces.Services;
 using TaskManager.Application.Common.Types;
 using TaskManager.Application.Feature.Projects.Errors;
 using TaskManager.Application.Feature.Projects.Responses;
-using TaskManager.Domain.Entities;
 
 namespace TaskManager.Application.Feature.Projects.Queries.GetProjectById
 {

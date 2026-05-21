@@ -1,7 +1,5 @@
-using Hangfire;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.OpenApi;
-using System.Threading.RateLimiting;
+using Microsoft.OpenApi.Models;
 using TaskManager.Api.Errors;
 
 namespace TaskManager.Api
@@ -20,6 +18,7 @@ namespace TaskManager.Api
                 .WithOrigins(configuration.GetSection("AllowedOrigins").Get<string[]>()!));
             });
             services.AddExceptionHandler<GlobalExceptionHandler>();
+
             services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc("v1", new OpenApiInfo { Title = "TaskManager API", Version = "v1" });
@@ -36,9 +35,19 @@ namespace TaskManager.Api
 
                 options.AddSecurityDefinition("Bearer", securityScheme);
                 
-                options.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
-                    { new OpenApiSecuritySchemeReference("Bearer"), new System.Collections.Generic.List<string>() }
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
                 });
             });
             services.AddEndpointsApiExplorer();

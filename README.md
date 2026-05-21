@@ -6,11 +6,12 @@ A production-grade, highly scalable backend system for managing Projects and Tas
 
 ## 🏗️ Technical Stack
 
-- **Framework**: .NET 10 (fully compatible with .NET 9)
+- **Framework**: .NET 9
 - **Database**: SQL Server
 - **ORM**: Entity Framework Core
 - **Authentication**: JWT Bearer Authentication & ASP.NET Core Identity
 - **Design Patterns**: CQRS with MediatR, Repository Pattern & Unit of Work, Result Pattern
+- **DevOps**: Docker & Docker Compose
 
 ---
 
@@ -49,6 +50,8 @@ graph TD
 - Swagger UI with built-in JWT authorization support.
 - Global Exception Handler: Intercepts exceptions globally and returns structured, standardized responses.
 
+- [x] **API Versioning**: URL-based versioning structure prepared (commented hint in Postman collection).
+
 ---
 
 ## 📋 Implemented Requirements Checklists
@@ -60,14 +63,14 @@ graph TD
 - [x] **Projects Module** (Ownership-bounded)
   - `POST /api/Projects` (Create project)
   - `GET /api/Projects` (Get all projects created by the authenticated user)
-  - `GET /api/Projects/{id}` (Get project by ID)
-  - `PUT /api/Projects/{id}` (Update project)
-  - `DELETE /api/Projects/{id}` (Delete project)
-- [x] **Tasks Module**
-  - `POST /api/Tasks` (Create task inside a project)
-  - `GET /api/Tasks/project/{projectId}` (Get tasks belonging to a project)
-  - `PUT /api/Tasks/{id}/status` (Update task status)
-  - `DELETE /api/Tasks/{id}` (Delete task)
+  - `GET /api/Projects/{id}` (Get project by ID - Owner only)
+  - `PUT /api/Projects/{id}` (Update project - Owner only)
+  - `DELETE /api/Projects/{id}` (Delete project - Owner only)
+- [x] **Tasks Module** (Project-scoped & Ownership-bounded)
+  - `POST /api/Tasks` (Create task inside a project - Project owner only)
+  - `GET /api/Tasks/project/{projectId}` (Get tasks belonging to a project - Project owner only)
+  - `PUT /api/Tasks/{id}/status` (Update task status - Project owner only)
+  - `DELETE /api/Tasks/{id}` (Delete task - Project owner only)
 
 ### 2. Architectural Requirements
 - [x] **Clean Architecture**: Strong boundary isolation.
@@ -75,51 +78,66 @@ graph TD
 - [x] **SOLID Principles**: Single Responsibility (separated handlers and validators), Open-Closed, Dependency Inversion (repositories abstract database logic).
 - [x] **DTO Usage**: Request/Response models are decoupled from database entities. Input models are validated prior to execution.
 - [x] **Global Exception Handling**: Centralized `GlobalExceptionHandler` returning RFC-compliant `ProblemDetails`.
+- [x] **Data Ownership & Security**: Strict ownership checks implemented in the Application Layer; users can only access, update, or delete projects and tasks they created.
 - [x] **Validation**: Integrated FluentValidation pipeline.
 
 ### 3. Bonus Points Implemented
 - [x] **CQRS (Command Query Responsibility Segregation)**: Read and Write pipelines are separated.
 - [x] **MediatR**: Decouples Controllers from Business Logic Handlers.
+- [x] **Docker**: `Dockerfile` and `docker-compose.yml` included.
 - [x] **Generic Response Wrapper**: Monadic `Result` and `Result<T>` pattern for consistent, type-safe operation outcomes.
 - [x] **Role-based Authorization**: Restricts endpoints by custom application permissions.
 - [x] **Redis Caching**: Built-in caching provider support.
 
 ---
 
-## ⚙️ Setup & Database Migrations
+## ⚙️ Setup & Execution Guide
 
-### 1. Connection String Config
-Open [appsettings.Development.json](file:///d:/C__/Hiring-Tasks/TaskManager/TaskManager.Api/appsettings.Development.json) and verify the connection string matches your local SQL Server instance:
+The project is designed to be highly flexible and can be executed in two ways:
 
-```json
-"ConnectionStrings": {
-  "DefaultConnection": "Server=.;Database=TaskManager;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=true"
-}
-```
+### 1. Docker Compose (Recommended - Zero Configuration)
+This method is ideal for quick evaluation as it sets up the API, SQL Server 2022, and Redis automatically with data persistence.
 
-> [!NOTE]
-> The JWT Secret Key is written inside `appsettings.Development.json` for **easy evaluator testing**. In a production environment, this key belongs in **User Secrets** or **Environment Variables**. A note explaining this has been left inside the config file.
+**Steps:**
+1.  **Open the Solution** in Visual Studio.
+2.  Locate the **docker-compose** project in the Solution Explorer.
+3.  **Right-click** it and select **Set as Startup Project**.
+4.  Press **F5**.
+5.  **Automatic Migrations**: The API will automatically create the database and tables upon startup.
+6.  **Access**: Swagger UI will open at `http://localhost:5000/swagger`.
 
-### 2. Run Database Migrations
-Run the following command inside Visual Studio's **Package Manager Console** to build the database schema and seed the initial roles and users:
+### 2. Local Execution (Manual Setup)
+If you prefer running the project on your local machine without Docker:
 
-```powershell
-Update-Database
-```
-*(Or use `dotnet ef database update --project TaskManager.Infrastructure --startup-project TaskManager.Api` from your CLI)*
+**Steps:**
+1.  **Database Config**: Update the `DefaultConnection` in [appsettings.Development.json](file:///d:/C__/Hiring-Tasks/TaskManager/TaskManager.Api/appsettings.Development.json) to point to your local SQL Server instance.
+2.  **Automatic Migrations**: No need to run CLI commands; the application will execute `context.Database.Migrate()` on startup.
+3.  **Redis Fallback**: The system is built with a **Smart Fallback Mechanism**. If a local Redis server is not detected, it will automatically switch to `AddDistributedMemoryCache` (In-Memory). This ensures the application runs perfectly even without Redis installed.
+4.  **Run**: Set `TaskManager.Api` as the startup project and press **F5**.
 
 ---
 
-## 🔐 Seeding & Swagger Testing
+## 🔐 Authentication & Testing
 
-1. Launch the API. Swagger UI will load at `https://localhost:7138/swagger`.
-2. **Authenticate**:
-   - Go to `POST /api/Auth/Login` and login with the default seeded administrator:
-     - **Email**: `admin@taskmanager.com`
-     - **Password**: `P@ssword123`
-   - Copy the `token` value from the response body.
-3. **Authorize**:
-   - Click the green **Authorize** lock button in the upper right.
-   - Paste the token (Swagger UI automatically prepends the `Bearer` scheme).
-   - Click **Authorize**.
-4. You can now access all protected projects and tasks endpoints.
+1. **Default Credentials**: The system seeds an admin user automatically:
+   - **Email**: `admin@taskmanager.com`
+   - **Password**: `P@ssword123`
+2. **Authorize**:
+   - Call `POST /api/Auth/Login` to get the JWT.
+   - Use the **Authorize** button in Swagger to paste the token.
+3. **Postman**: A pre-configured [TaskManager_Postman_Collection.json](file:///d:/C__/Hiring-Tasks/TaskManager/TaskManager_Postman_Collection.json) is available in the root folder.
+   - **Docker Port**: `http://localhost:5000` (Default in Collection).
+   - **Local Port**: `http://localhost:5156` (If running without Docker, simply update the `baseUrl` variable in Postman).
+
+---
+
+## 🏗️ Architecture & Pro-Features Implemented
+
+- **Clean Architecture**: Strict separation of concerns across 4 layers.
+- **CQRS**: Command Query Responsibility Segregation using **MediatR**.
+- **Data Ownership**: Users can only access and manage projects/tasks they created (checked in the Application layer).
+- **Resiliency**: Built-in **Retry Policy** for SQL connections to handle transient failures in containerized environments.
+- **Validation**: Centralized validation using **FluentValidation** pipeline behaviors.
+- **Global Exception Handling**: Returns standardized RFC-compliant `ProblemDetails`.
+- **Monadic Result Pattern**: Consistent, type-safe API responses.
+

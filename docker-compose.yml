@@ -1,0 +1,44 @@
+services:
+  taskmanager-api:
+    build:
+      context: .
+      dockerfile: TaskManager.Api/Dockerfile
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=TaskManager;User Id=sa;Password=Your_Production_Password123!;TrustServerCertificate=True
+      - ConnectionStrings__Redis=redis:6379
+      - Jwt__Key=Your_Super_Secret_Production_Key_Should_Be_Long_And_Secure_123!
+      - Jwt__Issuer=TaskManager Prod
+      - Jwt__Audience=TaskManager Users
+    depends_on:
+      sqlserver:
+        condition: service_started
+      redis:
+        condition: service_started
+    restart: always
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Your_Production_Password123!
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+    restart: always
+
+  redis:
+    image: redis:alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+
+volumes:
+  sql_data:
+  redis_data:

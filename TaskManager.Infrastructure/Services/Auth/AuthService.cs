@@ -137,6 +137,7 @@ namespace TaskManager.Infrastructure.Services.Auth
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Gender = request.Gender,
+                EmailConfirmed = true
             };
             var result = await _userManager.CreateAsync(user, request.Password);
             if (result.Succeeded)
