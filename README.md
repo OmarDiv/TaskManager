@@ -21,10 +21,23 @@ The system is designed following **Clean Architecture** principles to promote hi
 
 ```mermaid
 graph TD
-    Presentation[Presentation / TaskManager.Api] --> Application[Application / TaskManager.Application]
-    Infrastructure[Infrastructure / TaskManager.Infrastructure] --> Application
-    Infrastructure --> Domain[Domain / TaskManager.Domain]
-    Application --> Domain
+    %% الطبقة الخارجية (بوابة الدخول)
+    Presentation[Presentation / TaskManager.Api] -->|1. Sends Commands/Queries via MediatR| Application[Application / TaskManager.Application]
+    Presentation -->|2. Registers Services in Program.cs| Infrastructure[Infrastructure / TaskManager.Infrastructure]
+
+    %% الطبقة التقنية (الأدوات الخارجية)
+    Infrastructure -->|3. Implements Interfaces & Repositories| Application
+    Infrastructure -->|4. Uses Entities| Domain[Domain / TaskManager.Domain]
+
+    %% الطبقة الداخلية (القلب)
+    Application -->|5. Holds Core Business Rules & Entities| Domain
+
+    %% تحسين الألوان لبيان عمق الطبقات (من برة لجوه)
+    style Presentation fill:#f9f,stroke:#333,stroke-width:2px
+    style Infrastructure fill:#bbf,stroke:#333,stroke-width:2px
+    style Application fill:#bfb,stroke:#333,stroke-width:2px
+    style Domain fill:#fbb,stroke:#333,stroke-width:2px
+
 ```
 
 ### 1. Domain Layer (`TaskManager.Domain`)
