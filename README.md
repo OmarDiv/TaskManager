@@ -18,28 +18,24 @@ A production-grade, highly scalable backend system for managing Projects and Tas
 ## 📂 Architecture Overview
 
 The system is designed following **Clean Architecture** principles to promote high testability, maintainability, and loose coupling:
-
 ```mermaid
 graph TD
-    %% الطبقة الخارجية (بوابة الدخول)
-    Presentation[Presentation / TaskManager.Api] -->|1. Sends Commands/Queries via MediatR| Application[Application / TaskManager.Application]
-    Presentation -->|2. Registers Services in Program.cs| Infrastructure[Infrastructure / TaskManager.Infrastructure]
+    Presentation["Presentation<br/><sub>TaskManager.Api</sub>"]
+    Infrastructure["Infrastructure<br/><sub>TaskManager.Infrastructure</sub>"]
+    Application["Application<br/><sub>TaskManager.Application</sub>"]
+    Domain["Domain<br/><sub>TaskManager.Domain</sub>"]
 
-    %% الطبقة التقنية (الأدوات الخارجية)
-    Infrastructure -->|3. Implements Interfaces & Repositories| Application
-    Infrastructure -->|4. Uses Entities| Domain[Domain / TaskManager.Domain]
+    Presentation -->|"Commands & Queries · MediatR"| Application
+    Presentation -->|"Registers Services · Program.cs"| Infrastructure
+    Infrastructure -->|"Implements Interfaces & Repositories"| Application
+    Infrastructure -->|"Uses Entities"| Domain
+    Application -->|"Core Business Rules & Entities"| Domain
 
-    %% الطبقة الداخلية (القلب)
-    Application -->|5. Holds Core Business Rules & Entities| Domain
-
-    %% تحسين الألوان لبيان عمق الطبقات (من برة لجوه)
-    style Presentation fill:#f9f,stroke:#333,stroke-width:2px
-    style Infrastructure fill:#bbf,stroke:#333,stroke-width:2px
-    style Application fill:#bfb,stroke:#333,stroke-width:2px
-    style Domain fill:#fbb,stroke:#333,stroke-width:2px
-
+    style Presentation fill:#1e1e2e,stroke:#cba6f7,stroke-width:2px,color:#cba6f7
+    style Infrastructure fill:#1e1e2e,stroke:#89b4fa,stroke-width:2px,color:#89b4fa
+    style Application fill:#1e1e2e,stroke:#a6e3a1,stroke-width:2px,color:#a6e3a1
+    style Domain fill:#1e1e2e,stroke:#f38ba8,stroke-width:2px,color:#f38ba8
 ```
-
 ### 1. Domain Layer (`TaskManager.Domain`)
 - Core domain models: `Project` and `ProjectTask`.
 - Identity models: `ApplicationUser` and `ApplicationRole`.

@@ -12,6 +12,7 @@ services:
       - Jwt__Key=Your_Super_Secret_Production_Key_Should_Be_Long_And_Secure_123!
       - Jwt__Issuer=TaskManager Prod
       - Jwt__Audience=TaskManager Users
+      - Jwt__ExpirationInMinutes=60
     depends_on:
       sqlserver:
         condition: service_started
