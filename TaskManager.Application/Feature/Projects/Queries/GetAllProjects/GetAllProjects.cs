@@ -11,7 +11,7 @@ using TaskManager.Domain.Entities;
 
 namespace TaskManager.Application.Feature.Projects.Queries.GetAllProjects
 {
-    public record GetAllProjects(long CurrentUserId) : IRequest<Result<IEnumerable<ProjectResponse>>>;
+    public record GetAllProjects(long UserId) : IRequest<Result<IEnumerable<ProjectResponse>>>;
 
     public class GetAllProjectsHandler(
         IGenericRepository<Project> _projectRepository,
@@ -20,11 +20,11 @@ namespace TaskManager.Application.Feature.Projects.Queries.GetAllProjects
     {
         public async Task<Result<IEnumerable<ProjectResponse>>> Handle(GetAllProjects request, CancellationToken cancellationToken)
         {
-            string cacheKey = $"projects-user-{request.CurrentUserId}";
+            var cacheKey = $"projects-user-{request.UserId}";
             var response = await _cacheService.GetAsync(cacheKey, async () =>
             {
                 var projects = await _projectRepository.GetListByCriteria(
-                    p => p.CreatedById == request.CurrentUserId,
+                    p => p.CreatedById == request.UserId,
                     cancellationToken
                 );
 

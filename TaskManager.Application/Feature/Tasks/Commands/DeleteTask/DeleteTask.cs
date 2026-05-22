@@ -11,7 +11,7 @@ using TaskManager.Domain.Entities;
 
 namespace TaskManager.Application.Feature.Tasks.Commands.DeleteTask
 {
-    public record DeleteTask(long Id, long CurrentUserId) : IRequest<Result>;
+    public record DeleteTask(long Id, long UserId) : IRequest<Result>;
 
     public class DeleteTaskHandler(
         IGenericRepository<ProjectTask> _taskRepository,
@@ -32,7 +32,7 @@ namespace TaskManager.Application.Feature.Tasks.Commands.DeleteTask
                 return Result.Failure(TaskErrors.NotFound);
             }
 
-            if (task.Project.CreatedById != request.CurrentUserId)
+            if (task.Project.CreatedById != request.UserId)
             {
                 return Result.Failure(TaskErrors.UnauthorizedAccess);
             }

@@ -12,7 +12,7 @@ using TaskManager.Application.Feature.Projects.Responses;
 namespace TaskManager.Application.Feature.Projects.Commands.CreateProject
 {
     public record CreateProject(
-        string Name, string Description, long CreatedById) : IRequest<Result<ProjectResponse>>;
+        string Name, string Description, long UserId) : IRequest<Result<ProjectResponse>>;
 
     public class CreateProjectHandler(
         IGenericRepository<Project> _projectRepository,
@@ -23,7 +23,7 @@ namespace TaskManager.Application.Feature.Projects.Commands.CreateProject
         public async Task<Result<ProjectResponse>> Handle(CreateProject request, CancellationToken cancellationToken)
         {
             var exists = await _projectRepository.IsExist(
-                p => p.CreatedById == request.CreatedById && p.Name.ToLower() == request.Name.ToLower(),
+                p => p.CreatedById == request.UserId && p.Name.ToLower() == request.Name.ToLower(),
                 cancellationToken
             );
             //"الجزء ده كله المفروض يكون في Fluent Validation لكن قولت محاولتش اصعب الامور"
@@ -33,12 +33,17 @@ namespace TaskManager.Application.Feature.Projects.Commands.CreateProject
                 return Result.Failure<ProjectResponse>(ProjectErrors.DuplicateName);
             }
 
-            var project = request.Adapt<Project>();
+            var project = new Project
+            {
+                Name = request.Name,
+                Description = request.Description,
+                CreatedById = request.UserId
+            };
 
             await _projectRepository.AddAsync(project, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            await _cacheService.RemoveAsync($"projects-user-{request.CreatedById}", cancellationToken);
+            await _cacheService.RemoveAsync($"projects-user-{request.UserId}", cancellationToken);
 
             var response = project.Adapt<ProjectResponse>();
 

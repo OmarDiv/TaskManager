@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using TaskManager.Application.Common.Types;
@@ -10,6 +11,7 @@ using TaskManager.Api.Extention;
 
 namespace TaskManager.Api.Controllers
 {
+    // [ApiVersion("1.0")]
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController(IMediator mediator) : ControllerBase

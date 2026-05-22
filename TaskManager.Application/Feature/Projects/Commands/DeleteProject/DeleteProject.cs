@@ -10,7 +10,7 @@ using TaskManager.Domain.Entities;
 
 namespace TaskManager.Application.Feature.Projects.Commands.DeleteProject
 {
-    public record DeleteProject(long Id, long CurrentUserId) : IRequest<Result>;
+    public record DeleteProject(long Id, long UserId) : IRequest<Result>;
 
     public class DeleteProjectHandler(
         IGenericRepository<Project> _projectRepository,
@@ -26,8 +26,7 @@ namespace TaskManager.Application.Feature.Projects.Commands.DeleteProject
                 return Result.Failure(ProjectErrors.NotFound);
             }
 
-            // Ownership check
-            if (project.CreatedById != request.CurrentUserId)
+            if (project.CreatedById != request.UserId)
             {
                 return Result.Failure(ProjectErrors.UnauthorizedAccess);
             }
@@ -36,7 +35,7 @@ namespace TaskManager.Application.Feature.Projects.Commands.DeleteProject
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             // Invalidate Caches
-            await _cacheService.RemoveAsync($"projects-user-{request.CurrentUserId}", cancellationToken);
+            await _cacheService.RemoveAsync($"projects-user-{request.UserId}", cancellationToken);
             await _cacheService.RemoveAsync($"project-{request.Id}", cancellationToken);
             await _cacheService.RemoveAsync($"project-tasks-{request.Id}", cancellationToken);
 

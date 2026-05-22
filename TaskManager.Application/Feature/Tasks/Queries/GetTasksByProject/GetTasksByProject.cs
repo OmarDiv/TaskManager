@@ -12,7 +12,7 @@ using TaskManager.Domain.Entities;
 
 namespace TaskManager.Application.Feature.Tasks.Queries.GetTasksByProject
 {
-    public record GetTasksByProject(long ProjectId, long CurrentUserId) : IRequest<Result<IEnumerable<TaskResponse>>>;
+    public record GetTasksByProject(long ProjectId, long UserId) : IRequest<Result<IEnumerable<TaskResponse>>>;
 
     public class GetTasksByProjectHandler(
         IGenericRepository<Project> _projectRepository,
@@ -22,19 +22,19 @@ namespace TaskManager.Application.Feature.Tasks.Queries.GetTasksByProject
     {
         public async Task<Result<IEnumerable<TaskResponse>>> Handle(GetTasksByProject request, CancellationToken cancellationToken)
         {
-            // Verify project exists and belongs to the user
+            // Verify project exists and belongs to the current user
             var project = await _projectRepository.GetByIdAsync(request.ProjectId, cancellationToken);
             if (project == null)
             {
                 return Result.Failure<IEnumerable<TaskResponse>>(ProjectErrors.NotFound);
             }
 
-            if (project.CreatedById != request.CurrentUserId)
+            if (project.CreatedById != request.UserId)
             {
                 return Result.Failure<IEnumerable<TaskResponse>>(ProjectErrors.UnauthorizedAccess);
             }
 
-            string cacheKey = $"project-tasks-{request.ProjectId}";
+            var cacheKey = $"project-tasks-{request.ProjectId}";
             var response = await _cacheService.GetAsync(cacheKey, async () =>
             {
                 var tasks = await _taskRepository.GetListByCriteria(

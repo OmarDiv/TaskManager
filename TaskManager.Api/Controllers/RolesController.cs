@@ -37,18 +37,19 @@ namespace TaskManager.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<RoleDetailResponse>> Add([FromBody] RoleRequest request)
+        public async Task<ActionResult<RoleDetailResponse>> Add([FromBody] AddRole command)
         {
-            var result = await _mediator.Send(new AddRole(request));
+            var result = await _mediator.Send(command);
             return result.IsSuccess
                 ? result.AsCreatedResult(nameof(GetById), new { id = result.Value.Id })
                 : result.AsActionResult();
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<Result>> Update(long id, [FromBody] RoleRequest request, CancellationToken cancellationToken)
+        public async Task<ActionResult<Result>> Update(long id, [FromBody] UpdateRole command, CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(new UpdateRole(id, request), cancellationToken);
+            command = command with { id = id };
+            var result = await _mediator.Send(command, cancellationToken);
             return result.AsNoContentResult();
         }
 

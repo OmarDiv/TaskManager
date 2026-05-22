@@ -1,9 +1,14 @@
-﻿namespace TaskManager.Application.Feature.Roles.Commands.AddRole
+using FluentValidation;
+
+namespace TaskManager.Application.Feature.Roles.Commands.UpdateRole
 {
-    public class RoleRequestValidator : AbstractValidator<RoleRequest>
+    public class UpdateRoleValidator : AbstractValidator<UpdateRole>
     {
-        public RoleRequestValidator()
+        public UpdateRoleValidator()
         {
+            RuleFor(x => x.id)
+                .GreaterThan(0).WithMessage("Invalid role ID.");
+
             RuleFor(x => x.Name)
                 .NotEmpty()
                 .Length(3, 100);

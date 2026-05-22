@@ -12,7 +12,7 @@ using TaskManager.Domain.Entities;
 
 namespace TaskManager.Application.Feature.Projects.Commands.UpdateProject
 {
-    public record UpdateProject(long Id, string Name, string Description, long CurrentUserId) : IRequest<Result<ProjectResponse>>;
+    public record UpdateProject(long Id = 0, string Name = "", string Description = "", long UserId = 0) : IRequest<Result<ProjectResponse>>;
 
     public class UpdateProjectHandler(
         IGenericRepository<Project> _projectRepository,
@@ -29,14 +29,14 @@ namespace TaskManager.Application.Feature.Projects.Commands.UpdateProject
             }
 
             // Ownership check
-            if (project.CreatedById != request.CurrentUserId)
+            if (project.CreatedById != request.UserId)
             {
                 return Result.Failure<ProjectResponse>(ProjectErrors.UnauthorizedAccess);
             }
 
             // Check duplicate name (excluding this project)
             var exists = await _projectRepository.IsExist(
-                p => p.CreatedById == request.CurrentUserId && p.Name.ToLower() == request.Name.ToLower() && p.Id != request.Id,
+                p => p.CreatedById == request.UserId && p.Name.ToLower() == request.Name.ToLower() && p.Id != request.Id,
                 cancellationToken
             );
 
@@ -48,12 +48,8 @@ namespace TaskManager.Application.Feature.Projects.Commands.UpdateProject
             project.Name = request.Name;
             project.Description = request.Description;
 
-            await _projectRepository.UpdateAsync(project, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            // Invalidate Caches
-            await _cacheService.RemoveAsync($"projects-user-{request.CurrentUserId}", cancellationToken);
-            await _cacheService.RemoveAsync($"project-{request.Id}", cancellationToken);
+            await _cacheService.RemoveAsync($"projects-user-{request.UserId}", cancellationToken);
 
             var response = project.Adapt<ProjectResponse>();
 

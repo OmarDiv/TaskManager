@@ -21,7 +21,7 @@ namespace TaskManager.Application.Feature.Tasks.Commands.CreateTask
         DateTime? DueDate,
         Priority Priority,
         long ProjectId,
-        long CurrentUserId
+        long UserId
     ) : IRequest<Result<TaskResponse>>;
 
     public class CreateTaskHandler(
@@ -40,12 +40,20 @@ namespace TaskManager.Application.Feature.Tasks.Commands.CreateTask
                 return Result.Failure<TaskResponse>(ProjectErrors.NotFound);
             }
 
-            if (project.CreatedById != request.CurrentUserId)
+            if (project.CreatedById != request.UserId)
             {
                 return Result.Failure<TaskResponse>(ProjectErrors.UnauthorizedAccess);
             }
 
-            var task = request.Adapt<ProjectTask>();
+            var task = new ProjectTask
+            {
+                Title = request.Title,
+                Description = request.Description,
+                Status = request.Status,
+                DueDate = request.DueDate,
+                Priority = request.Priority,
+                ProjectId = request.ProjectId
+            };
 
             await _taskRepository.AddAsync(task, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);

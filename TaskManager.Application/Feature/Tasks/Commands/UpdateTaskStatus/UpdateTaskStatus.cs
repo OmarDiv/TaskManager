@@ -17,7 +17,7 @@ namespace TaskManager.Application.Feature.Tasks.Commands.UpdateTaskStatus
     public record UpdateTaskStatus(
         long Id,
         Status Status,
-        long CurrentUserId
+        long UserId
     ) : IRequest<Result<TaskResponse>>;
 
     public class UpdateTaskStatusHandler(
@@ -40,14 +40,13 @@ namespace TaskManager.Application.Feature.Tasks.Commands.UpdateTaskStatus
                 return Result.Failure<TaskResponse>(TaskErrors.NotFound);
             }
 
-            if (task.Project.CreatedById != request.CurrentUserId)
+            if (task.Project.CreatedById != request.UserId)
             {
                 return Result.Failure<TaskResponse>(TaskErrors.UnauthorizedAccess);
             }
 
             task.Status = request.Status;
 
-            await _taskRepository.UpdateAsync(task, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             // Invalidate Caches

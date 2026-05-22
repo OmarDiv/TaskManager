@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using TaskManager.Api.DTOs.Projects;
 using TaskManager.Api.Extention;
 using TaskManager.Application.Common.Types;
 using TaskManager.Application.Feature.Projects.Commands.CreateProject;
@@ -24,10 +23,9 @@ namespace TaskManager.Api.Controllers
         private readonly IMediator _mediator = mediator;
 
         [HttpPost]
-        public async Task<ActionResult<ProjectResponse>> Create([FromBody] CreateProjectDto dto, CancellationToken cancellationToken)
+        public async Task<ActionResult<ProjectResponse>> Create([FromBody] CreateProject command, CancellationToken cancellationToken)
         {
-            var userId = User.GetUserId();
-            var command = new CreateProject(dto.Name, dto.Description, userId);
+            command = command with { UserId = User.GetUserId() };
             var result = await _mediator.Send(command, cancellationToken);
             
             return result.IsSuccess
@@ -54,10 +52,9 @@ namespace TaskManager.Api.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<ProjectResponse>> Update([FromRoute] long id, [FromBody] UpdateProjectDto dto, CancellationToken cancellationToken)
+        public async Task<ActionResult<ProjectResponse>> Update([FromRoute] long id, [FromBody] UpdateProject command, CancellationToken cancellationToken)
         {
-            var userId = User.GetUserId();
-            var command = new UpdateProject(id, dto.Name, dto.Description, userId);
+            command = command with { Id = id, UserId = User.GetUserId() };
             var result = await _mediator.Send(command, cancellationToken);
             return result.AsActionResult();
         }

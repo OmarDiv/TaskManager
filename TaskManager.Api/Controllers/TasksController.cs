@@ -1,7 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TaskManager.Api.DTOs.Tasks;
 using TaskManager.Api.Extention;
 using TaskManager.Application.Common.Types;
 using TaskManager.Application.Feature.Tasks.Commands.CreateTask;
@@ -20,18 +19,9 @@ namespace TaskManager.Api.Controllers
         private readonly IMediator _mediator = mediator;
 
         [HttpPost]
-        public async Task<ActionResult<TaskResponse>> Create([FromBody] CreateTaskDto dto, CancellationToken cancellationToken)
+        public async Task<ActionResult<TaskResponse>> Create([FromBody] CreateTask command, CancellationToken cancellationToken)
         {
-            var userId = User.GetUserId();
-            var command = new CreateTask(
-                dto.Title,
-                dto.Description,
-                dto.Status,
-                dto.DueDate,
-                dto.Priority,
-                dto.ProjectId,
-                userId
-            );
+            command = command with { UserId = User.GetUserId() };
 
             var result = await _mediator.Send(command, cancellationToken);
             return result.IsSuccess
@@ -49,10 +39,9 @@ namespace TaskManager.Api.Controllers
         }
 
         [HttpPut("{id}/status")]
-        public async Task<ActionResult<TaskResponse>> UpdateStatus([FromRoute] long id, [FromBody] UpdateTaskStatusDto dto, CancellationToken cancellationToken)
+        public async Task<ActionResult<TaskResponse>> UpdateStatus([FromRoute] long id, [FromBody] UpdateTaskStatus command, CancellationToken cancellationToken)
         {
-            var userId = User.GetUserId();
-            var command = new UpdateTaskStatus(id, dto.Status, userId);
+            command = command with { Id = id, UserId = User.GetUserId() };
             var result = await _mediator.Send(command, cancellationToken);
             return result.AsActionResult();
         }
