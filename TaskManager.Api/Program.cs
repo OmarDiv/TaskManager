@@ -1,3 +1,4 @@
+using Asp.Versioning.ApiExplorer;
 using Microsoft.EntityFrameworkCore;
 using TaskManager.Api;
 using TaskManager.Application;
@@ -10,8 +11,6 @@ builder.Services
     .AddApplication(builder.Configuration)
     .AddInfrastructureServices(builder.Configuration)
     .AddPresentation(builder.Configuration);
-
-builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
@@ -38,7 +37,14 @@ app.UseExceptionHandler();
 
 // Enable Swagger in Production for evaluation purposes
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(options =>
+{
+    var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+    foreach (var description in provider.ApiVersionDescriptions)
+    {
+        options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
+    }
+});
 
 app.UseRouting();
 app.UseHttpsRedirection();

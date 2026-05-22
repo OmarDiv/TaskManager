@@ -1,5 +1,9 @@
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using TaskManager.Api.Errors;
 
 namespace TaskManager.Api
@@ -19,10 +23,24 @@ namespace TaskManager.Api
             });
             services.AddExceptionHandler<GlobalExceptionHandler>();
 
+            services.AddApiVersioning(options =>
+            {
+                options.DefaultApiVersion = new ApiVersion(1, 0);
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                options.ReportApiVersions = true;
+                options.ApiVersionReader = ApiVersionReader.Combine(
+                    new HeaderApiVersionReader("api-version"),
+                    new MediaTypeApiVersionReader("version")
+                );
+            }).AddApiExplorer(options =>
+            {
+                options.GroupNameFormat = "'v'VVV";
+                options.SubstituteApiVersionInUrl = true;
+            });
+
+            services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
             services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc("v1", new OpenApiInfo { Title = "TaskManager API", Version = "v1" });
-                
                 var securityScheme = new OpenApiSecurityScheme
                 {
                     Name = "Authorization",
@@ -50,10 +68,39 @@ namespace TaskManager.Api
                     }
                 });
             });
+
             services.AddEndpointsApiExplorer();
             services.AddProblemDetails();
 
             return services;
+        }
+    }
+
+    public class ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider) : IConfigureOptions<SwaggerGenOptions>
+    {
+        public void Configure(SwaggerGenOptions options)
+        {
+            foreach (var description in provider.ApiVersionDescriptions)
+            {
+                options.SwaggerDoc(description.GroupName, CreateInfoForApiVersion(description));
+            }
+        }
+
+        private static OpenApiInfo CreateInfoForApiVersion(ApiVersionDescription description)
+        {
+            var info = new OpenApiInfo()
+            {
+                Title = "TaskManager API",
+                Version = description.ApiVersion.ToString(),
+                Description = "Task Manager API with multi-version support."
+            };
+
+            if (description.IsDeprecated)
+            {
+                info.Description += " (This version is deprecated).";
+            }
+
+            return info;
         }
     }
 }

@@ -13,7 +13,7 @@ namespace TaskManager.Application.Feature.Projects.Commands.CreateProject
             RuleFor(x => x.Description)
                 .MaximumLength(500).WithMessage("Description cannot exceed 500 characters.");
 
-            RuleFor(x => x.CreatedById)
+            RuleFor(x => x.UserId)
                 .GreaterThan(0).WithMessage("Invalid creator user ID.");
         }
     }

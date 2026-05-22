@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,8 +14,9 @@ using TaskManager.Application.Feature.Projects.Queries.GetAllProjects;
 using TaskManager.Application.Feature.Projects.Queries.GetProjectById;
 using TaskManager.Application.Feature.Projects.Responses;
 
-namespace TaskManager.Api.Controllers
+namespace TaskManager.Api.Controllers.V1
 {
+    [ApiVersion("1.0", Deprecated = true)]
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
@@ -23,6 +25,7 @@ namespace TaskManager.Api.Controllers
         private readonly IMediator _mediator = mediator;
 
         [HttpPost]
+        [MapToApiVersion("1.0")]
         public async Task<ActionResult<ProjectResponse>> Create([FromBody] CreateProject command, CancellationToken cancellationToken)
         {
             command = command with { UserId = User.GetUserId() };
@@ -34,6 +37,7 @@ namespace TaskManager.Api.Controllers
         }
 
         [HttpGet]
+        [MapToApiVersion("1.0")]
         public async Task<ActionResult<IEnumerable<ProjectResponse>>> GetAll(CancellationToken cancellationToken)
         {
             var userId = User.GetUserId();
@@ -43,6 +47,7 @@ namespace TaskManager.Api.Controllers
         }
 
         [HttpGet("{id}", Name = nameof(GetById))]
+        [MapToApiVersion("1.0")]
         public async Task<ActionResult<ProjectResponse>> GetById([FromRoute] long id, CancellationToken cancellationToken)
         {
             var userId = User.GetUserId();
@@ -52,6 +57,7 @@ namespace TaskManager.Api.Controllers
         }
 
         [HttpPut("{id}")]
+        [MapToApiVersion("1.0")]
         public async Task<ActionResult<ProjectResponse>> Update([FromRoute] long id, [FromBody] UpdateProject command, CancellationToken cancellationToken)
         {
             command = command with { Id = id, UserId = User.GetUserId() };
@@ -60,6 +66,7 @@ namespace TaskManager.Api.Controllers
         }
 
         [HttpDelete("{id}")]
+        [MapToApiVersion("1.0")]
         public async Task<ActionResult<Result>> Delete([FromRoute] long id, CancellationToken cancellationToken)
         {
             var userId = User.GetUserId();

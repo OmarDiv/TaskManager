@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,8 +14,9 @@ using TaskManager.Application.Feature.Roles.Queries.GetAllRoles;
 using TaskManager.Application.Feature.Roles.Queries.GetRoleById;
 using TaskManager.Application.Feature.Roles.Responses;
 
-namespace TaskManager.Api.Controllers
+namespace TaskManager.Api.Controllers.V1
 {
+    [ApiVersion("1.0", Deprecated = true)]
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(Roles = "Admin")]
@@ -23,6 +25,7 @@ namespace TaskManager.Api.Controllers
         private readonly IMediator _mediator = mediator;
 
         [HttpGet]
+        [MapToApiVersion("1.0")]
         public async Task<ActionResult<IEnumerable<RoleResponse>>> GetAll([FromQuery] bool IncludeDisabled, CancellationToken cancellationToken)
         {
             var result = await _mediator.Send(new GetAllRoles(IncludeDisabled), cancellationToken);
@@ -30,6 +33,7 @@ namespace TaskManager.Api.Controllers
         }
 
         [HttpGet("{id}")]
+        [MapToApiVersion("1.0")]
         public async Task<ActionResult<RoleDetailResponse>> GetById([FromRoute] long id, CancellationToken cancellationToken)
         {
             var result = await _mediator.Send(new GetRoleById(id), cancellationToken);
@@ -37,6 +41,7 @@ namespace TaskManager.Api.Controllers
         }
 
         [HttpPost]
+        [MapToApiVersion("1.0")]
         public async Task<ActionResult<RoleDetailResponse>> Add([FromBody] AddRole command)
         {
             var result = await _mediator.Send(command);
@@ -46,6 +51,7 @@ namespace TaskManager.Api.Controllers
         }
 
         [HttpPut("{id}")]
+        [MapToApiVersion("1.0")]
         public async Task<ActionResult<Result>> Update(long id, [FromBody] UpdateRole command, CancellationToken cancellationToken)
         {
             command = command with { id = id };
@@ -54,6 +60,7 @@ namespace TaskManager.Api.Controllers
         }
 
         [HttpPut("{id}/toggle-status")]
+        [MapToApiVersion("1.0")]
         public async Task<ActionResult<Result>> ToggleStatus(long id, CancellationToken cancellationToken)
         {
             var result = await _mediator.Send(new ToggleRoleStatus(id), cancellationToken);
