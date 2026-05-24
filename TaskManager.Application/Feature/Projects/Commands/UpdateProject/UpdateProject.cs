@@ -36,7 +36,7 @@ namespace TaskManager.Application.Feature.Projects.Commands.UpdateProject
 
             // Check duplicate name (excluding this project)
             var exists = await _projectRepository.IsExist(
-                p => p.CreatedById == request.UserId && p.Name.ToLower() == request.Name.ToLower() && p.Id != request.Id,
+                p => p.CreatedById == request.UserId && p.Id != request.Id,
                 cancellationToken
             );
 
@@ -45,8 +45,8 @@ namespace TaskManager.Application.Feature.Projects.Commands.UpdateProject
                 return Result.Failure<ProjectResponse>(ProjectErrors.DuplicateName);
             }
 
-            project.Name = request.Name;
-            project.Description = request.Description;
+            //project.Name = request.Name;
+            //project.Description = request.Description;
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             await _cacheService.RemoveAsync($"projects-user-{request.UserId}", cancellationToken);

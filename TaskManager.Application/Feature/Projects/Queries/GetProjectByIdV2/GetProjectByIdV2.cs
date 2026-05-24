@@ -29,15 +29,15 @@ namespace TaskManager.Application.Feature.Projects.Queries.GetProjectByIdV2
             {
                 return Result.Failure<ProjectResponseV2>(ProjectErrors.NotFound);
             }
-
-            var response = new ProjectResponseV2(
-                project.Id,
-                project.Name,
-                project.Description,
-                project.Tasks.Count,
-                project.CreatedById,
-                DateTime.UtcNow // In real case, use project.CreatedAt if exists
-            );
+            ProjectResponseV2? response = default;
+            //var response = new ProjectResponseV2(
+            //    project.Id,
+            //    //project.Name,
+            //    //project.Description,
+            //    project.Tasks.Count,
+            //    project.CreatedById,
+            //    DateTime.UtcNow // In real case, use project.CreatedAt if exists
+            //);
 
             return Result.Success(response);
         }

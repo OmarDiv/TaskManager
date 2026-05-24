@@ -47,8 +47,8 @@ namespace TaskManager.Application.Feature.Tasks.Commands.CreateTask
 
             var task = new ProjectTask
             {
-                Title = request.Title,
-                Description = request.Description,
+                //Title = request.Title,
+                //Description = request.Description,
                 Status = request.Status,
                 DueDate = request.DueDate,
                 Priority = request.Priority,
