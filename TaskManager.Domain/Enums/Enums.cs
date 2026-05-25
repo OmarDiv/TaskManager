@@ -4,25 +4,25 @@ namespace TaskManager.Domain.Enums
 {
     public enum Status
     {
-        [Display(Name = "To Do")]
+        [Display(Name = nameof(Todo))]
         Todo = 1,
 
-        [Display(Name = "In Progress")]
+        [Display(Name = nameof(InProgress))]
         InProgress = 2,
 
-        [Display(Name = "Completed")]
+        [Display(Name = nameof(Completed))]
         Completed = 3
     }
 
     public enum Priority
     {
-        [Display(Name = "Low")]
+        [Display(Name = nameof(Low))]
         Low = 1,
 
-        [Display(Name = "Medium")]
+        [Display(Name = nameof(Medium))]
         Medium = 2,
 
-        [Display(Name = "High")]
+        [Display(Name = nameof(High))]
         High = 3
     }
     public enum Gender

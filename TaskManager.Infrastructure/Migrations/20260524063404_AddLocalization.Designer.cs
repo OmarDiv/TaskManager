@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskManager.Infrastructure.Persistence.Context;
 
@@ -11,9 +12,11 @@ using TaskManager.Infrastructure.Persistence.Context;
 namespace TaskManager.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260524063404_AddLocalization")]
+    partial class AddLocalization
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -477,22 +480,20 @@ namespace TaskManager.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<long?>("CreatedById")
+                    b.Property<long>("CreatedById")
                         .HasColumnType("bigint");
 
-                    b.Property<long?>("DescriptionSetId")
-                        .HasColumnType("bigint");
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<long?>("NameSetId")
-                        .HasColumnType("bigint");
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedById");
-
-                    b.HasIndex("DescriptionSetId");
-
-                    b.HasIndex("NameSetId");
 
                     b.ToTable("Projects");
                 });
@@ -505,8 +506,9 @@ namespace TaskManager.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<long?>("DescriptionSetId")
-                        .HasColumnType("bigint");
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime2");
@@ -514,22 +516,19 @@ namespace TaskManager.Infrastructure.Migrations
                     b.Property<int>("Priority")
                         .HasColumnType("int");
 
-                    b.Property<long?>("ProjectId")
+                    b.Property<long>("ProjectId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<long?>("TitleSetId")
-                        .HasColumnType("bigint");
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DescriptionSetId");
-
                     b.HasIndex("ProjectId");
-
-                    b.HasIndex("TitleSetId");
 
                     b.ToTable("Tasks", (string)null);
                 });
@@ -638,43 +637,21 @@ namespace TaskManager.Infrastructure.Migrations
                     b.HasOne("TaskManager.Domain.Entities.ApplicationUser", "CreatedBy")
                         .WithMany("Projects")
                         .HasForeignKey("CreatedById")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("TaskManager.Domain.Entities.Common.LocalizationSet", "DescriptionSet")
-                        .WithMany()
-                        .HasForeignKey("DescriptionSetId");
-
-                    b.HasOne("TaskManager.Domain.Entities.Common.LocalizationSet", "NameSet")
-                        .WithMany()
-                        .HasForeignKey("NameSetId");
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("CreatedBy");
-
-                    b.Navigation("DescriptionSet");
-
-                    b.Navigation("NameSet");
                 });
 
             modelBuilder.Entity("TaskManager.Domain.Entities.ProjectTask", b =>
                 {
-                    b.HasOne("TaskManager.Domain.Entities.Common.LocalizationSet", "DescriptionSet")
-                        .WithMany()
-                        .HasForeignKey("DescriptionSetId");
-
                     b.HasOne("TaskManager.Domain.Entities.Project", "Project")
                         .WithMany("Tasks")
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("TaskManager.Domain.Entities.Common.LocalizationSet", "TitleSet")
-                        .WithMany()
-                        .HasForeignKey("TitleSetId");
-
-                    b.Navigation("DescriptionSet");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Project");
-
-                    b.Navigation("TitleSet");
                 });
 
             modelBuilder.Entity("TaskManager.Domain.Entities.ApplicationUser", b =>

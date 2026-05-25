@@ -22,12 +22,16 @@ namespace TaskManager.Application.Feature.Projects.Commands.CreateProject
     {
         public async Task<Result<ProjectResponse>> Handle(CreateProject request, CancellationToken cancellationToken)
         {
-            var exists = await _projectRepository.IsExist(
-                p => p.CreatedById == request.UserId && p.Name.ToLower() == request.Name.ToLower(),
-                cancellationToken
-            );
+            //var exists = await _projectRepository.IsExist(
+            //    p => p.CreatedById == request.UserId && p.Name.ToLower() == request.Name.ToLower(),
+            //    cancellationToken
+            //);
             //"الجزء ده كله المفروض يكون في Fluent Validation لكن قولت محاولتش اصعب الامور"
             // الطبيعي ان اليوزر مينفعش يوصل هنا غير لما نعمل تشيك علي كل الحاجات دي من ال FLUENT Validation 
+            var exists = await _projectRepository.IsExist(
+                p => p.CreatedById == request.UserId,
+                cancellationToken
+            );
             if (exists)
             {
                 return Result.Failure<ProjectResponse>(ProjectErrors.DuplicateName);
@@ -35,8 +39,8 @@ namespace TaskManager.Application.Feature.Projects.Commands.CreateProject
 
             var project = new Project
             {
-                Name = request.Name,
-                Description = request.Description,
+                //Name = request.Name,
+                //Description = request.Description,
                 CreatedById = request.UserId
             };
 
