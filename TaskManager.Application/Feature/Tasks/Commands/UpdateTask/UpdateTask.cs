@@ -1,40 +1,46 @@
 using FluentValidation;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using TaskManager.Application.Common.Interfaces.Persistence;
 using TaskManager.Application.Common.Interfaces.Repositories;
 using TaskManager.Application.Common.Interfaces.Services;
 using TaskManager.Application.Common.Types;
+using TaskManager.Application.Common.Localizations;
 using TaskManager.Application.Feature.Tasks.Responses;
 using TaskManager.Domain.Entities;
+using TaskManager.Domain.Entities.Common;
 using TaskManager.Domain.Enums;
 
-namespace TaskManager.Application.Feature.Tasks.Commands.UpdateTaskStatus
+namespace TaskManager.Application.Feature.Tasks.Commands.UpdateTask
 {
-    public record UpdateTaskStatus(
+    public record UpdateTask(
         long Id,
+        List<LocalizationDto> Title,
+        List<LocalizationDto> Description,
         Status Status,
+        DateTime? DueDate,
+        Priority Priority,
         long UserId
     ) : IRequest<Result<TaskResponse>>;
 
-    public class UpdateTaskStatusHandler(
+    public class UpdateTaskHandler(
         IGenericRepository<ProjectTask> _taskRepository,
         IUnitOfWork _unitOfWork,
         ICacheService _cacheService
-    ) : IRequestHandler<UpdateTaskStatus, Result<TaskResponse>>
+    ) : IRequestHandler<UpdateTask, Result<TaskResponse>>
     {
-        public async Task<Result<TaskResponse>> Handle(UpdateTaskStatus request, CancellationToken cancellationToken)
+        public async Task<Result<TaskResponse>> Handle(UpdateTask request, CancellationToken cancellationToken)
         {
-            // Retrieve task and include Project to check ownership
-            var task = await _taskRepository.GetById(
-                request.Id,
-                q => q.Include(t => t.Project)
-                      .Include(t => t.TitleSet).ThenInclude(ts => ts.Localization)
-                      .Include(t => t.DescriptionSet).ThenInclude(ds => ds.Localization),
-                cancellationToken
-            );
+            var task = await _taskRepository.AsQueryable()
+                .Include(t => t.Project)
+                .Include(t => t.TitleSet).ThenInclude(ts => ts.Localization)
+                .Include(t => t.DescriptionSet).ThenInclude(ds => ds.Localization)
+                .FirstOrDefaultAsync(t => t.Id == request.Id, cancellationToken);
 
             if (task == null)
             {
@@ -46,7 +52,7 @@ namespace TaskManager.Application.Feature.Tasks.Commands.UpdateTaskStatus
                 return ResultMessage.TaskUnauthorizedAccess;
             }
 
-            task.Status = request.Status;
+            request.Adapt(task);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 

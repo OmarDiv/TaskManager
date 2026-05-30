@@ -1,10 +1,7 @@
-using MediatR;
-using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 using TaskManager.Application.Common.Interfaces.Repositories;
 using TaskManager.Application.Common.Interfaces.Services;
-using TaskManager.Application.Common.Types;
-using TaskManager.Application.Feature.Projects.Errors;
 using TaskManager.Application.Feature.Projects.Responses;
 
 namespace TaskManager.Application.Feature.Projects.Queries.GetProjectById
@@ -18,10 +15,13 @@ namespace TaskManager.Application.Feature.Projects.Queries.GetProjectById
     {
         public async Task<Result<ProjectResponse>> Handle(GetProjectById request, CancellationToken cancellationToken)
         {
-            string cacheKey = $"project-{request.Id}";
+            string cacheKey = $"project-{request.Id}-{CultureInfo.CurrentCulture.Name}";
             var response = await _cacheService.GetAsync(cacheKey, async () =>
             {
-                var project = await _projectRepository.GetByIdAsync(request.Id, cancellationToken);
+                var project = await _projectRepository.AsQueryable()
+                    .Include(p => p.NameSet).ThenInclude(ns => ns.Localization)
+                    .Include(p => p.DescriptionSet).ThenInclude(ds => ds.Localization)
+                    .FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken);
                 if (project == null) return null;
                 
                 return project.Adapt<ProjectResponse>();
@@ -29,13 +29,13 @@ namespace TaskManager.Application.Feature.Projects.Queries.GetProjectById
 
             if (response == null)
             {
-                return Result.Failure<ProjectResponse>(ProjectErrors.NotFound);
+                return ResultMessage.ProjectNotFound;
             }
 
             // Ownership check
             if (response.CreatedById != request.CurrentUserId)
             {
-                return Result.Failure<ProjectResponse>(ProjectErrors.UnauthorizedAccess);
+                return ResultMessage.ProjectUnauthorizedAccess;
             }
 
             return Result.Success(response);

@@ -1,12 +1,13 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TaskManager.Application.Common.Interfaces.Repositories;
 using TaskManager.Application.Common.Interfaces.Services;
 using TaskManager.Application.Common.Types;
-using TaskManager.Application.Feature.Projects.Errors;
 using TaskManager.Application.Feature.Tasks.Responses;
 using TaskManager.Domain.Entities;
 
@@ -26,21 +27,22 @@ namespace TaskManager.Application.Feature.Tasks.Queries.GetTasksByProject
             var project = await _projectRepository.GetByIdAsync(request.ProjectId, cancellationToken);
             if (project == null)
             {
-                return Result.Failure<IEnumerable<TaskResponse>>(ProjectErrors.NotFound);
+                return ResultMessage.ProjectNotFound;
             }
 
             if (project.CreatedById != request.UserId)
             {
-                return Result.Failure<IEnumerable<TaskResponse>>(ProjectErrors.UnauthorizedAccess);
+                return ResultMessage.ProjectUnauthorizedAccess;
             }
 
-            var cacheKey = $"project-tasks-{request.ProjectId}";
+            var cacheKey = $"project-tasks-{request.ProjectId}-{CultureInfo.CurrentCulture.Name}";
             var response = await _cacheService.GetAsync(cacheKey, async () =>
             {
-                var tasks = await _taskRepository.GetListByCriteria(
-                    t => t.ProjectId == request.ProjectId,
-                    cancellationToken
-                );
+                var tasks = await _taskRepository.AsQueryable()
+                    .Include(t => t.TitleSet).ThenInclude(ts => ts.Localization)
+                    .Include(t => t.DescriptionSet).ThenInclude(ds => ds.Localization)
+                    .Where(t => t.ProjectId == request.ProjectId)
+                    .ToListAsync(cancellationToken);
 
                 return tasks.Adapt<List<TaskResponse>>();
             }, cancellationToken);

@@ -8,12 +8,16 @@ namespace TaskManager.Application.Feature.Auth.Commands.Login
         public LoginUserValidator()
         {
             RuleFor(x => x.Email)
+                .NotEmpty()
+                .WithMessage(ResultMessage.Required)
                 .EmailAddress()
-                .NotEmpty();
+                .WithMessage(ResultMessage.InvalidEmail);
+
             RuleFor(x => x.Password)
                .NotEmpty()
+               .WithMessage(ResultMessage.Required)
                .Matches(RegexPatterns.Password)
-               .WithMessage("Password should be at least 8 digits and should contains Lowercase, NonAlphanumeric and Uppercase");
+               .WithMessage(ResultMessage.PasswordComplexity);
         }
     }
 }

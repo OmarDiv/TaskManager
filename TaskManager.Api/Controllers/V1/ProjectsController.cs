@@ -26,53 +26,45 @@ namespace TaskManager.Api.Controllers.V1
 
         [HttpPost]
         [MapToApiVersion("1.0")]
-        public async Task<ActionResult<ProjectResponse>> Create([FromBody] CreateProject command, CancellationToken cancellationToken)
+        public async Task<Result<ProjectResponse>> Create([FromBody] CreateProject command, CancellationToken cancellationToken)
         {
             command = command with { UserId = User.GetUserId() };
-            var result = await _mediator.Send(command, cancellationToken);
-            
-            return result.IsSuccess
-                ? result.AsCreatedResult(nameof(GetById), new { id = result.Value.Id })
-                : result.AsActionResult();
+           return await _mediator.Send(command, cancellationToken);
         }
 
         [HttpGet]
         [MapToApiVersion("1.0")]
-        public async Task<ActionResult<IEnumerable<ProjectResponse>>> GetAll(CancellationToken cancellationToken)
+        public async Task<Result<List<ProjectResponse>>> GetAll(CancellationToken cancellationToken)
         {
             var userId = User.GetUserId();
             var query = new GetAllProjects(userId);
-            var result = await _mediator.Send(query, cancellationToken);
-            return result.AsActionResult();
+            return await _mediator.Send(query, cancellationToken);
         }
 
         [HttpGet("{id}", Name = nameof(GetById))]
         [MapToApiVersion("1.0")]
-        public async Task<ActionResult<ProjectResponse>> GetById([FromRoute] long id, CancellationToken cancellationToken)
+        public async Task<Result<ProjectResponse>> GetById([FromRoute] long id, CancellationToken cancellationToken)
         {
             var userId = User.GetUserId();
             var query = new GetProjectById(id, userId);
-            var result = await _mediator.Send(query, cancellationToken);
-            return result.AsActionResult();
-        }
+            return await _mediator.Send(query, cancellationToken);
+        }   
 
         [HttpPut("{id}")]
         [MapToApiVersion("1.0")]
-        public async Task<ActionResult<ProjectResponse>> Update([FromRoute] long id, [FromBody] UpdateProject command, CancellationToken cancellationToken)
+        public async Task<Result<ProjectResponse>> Update([FromRoute] long id, [FromBody] UpdateProject command, CancellationToken cancellationToken)
         {
             command = command with { Id = id, UserId = User.GetUserId() };
-            var result = await _mediator.Send(command, cancellationToken);
-            return result.AsActionResult();
+            return await _mediator.Send(command, cancellationToken);
         }
 
         [HttpDelete("{id}")]
         [MapToApiVersion("1.0")]
-        public async Task<ActionResult<Result>> Delete([FromRoute] long id, CancellationToken cancellationToken)
+        public async Task<Result> Delete([FromRoute] long id, CancellationToken cancellationToken)
         {
             var userId = User.GetUserId();
             var command = new DeleteProject(id, userId);
-            var result = await _mediator.Send(command, cancellationToken);
-            return result.AsNoContentResult();
+            return await _mediator.Send(command, cancellationToken);
         }
     }
 }

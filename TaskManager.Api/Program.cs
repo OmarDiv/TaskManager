@@ -1,7 +1,12 @@
 using Asp.Versioning.ApiExplorer;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
+using System.Globalization;
 using TaskManager.Api;
+using TaskManager.Api.Middlewares;
 using TaskManager.Application;
+using TaskManager.Application.Common.Types;
 using TaskManager.Infrastructure;
 using TaskManager.Infrastructure.Persistence.Context;
 
@@ -13,6 +18,9 @@ builder.Services
     .AddPresentation(builder.Configuration);
 
 var app = builder.Build();
+
+ConfigureLocalization(app);
+
 
 // Automatic Migration for Docker environment
 using (var scope = app.Services.CreateScope())
@@ -33,7 +41,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.UseExceptionHandler();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Enable Swagger in Production for evaluation purposes
 app.UseSwagger();
@@ -45,7 +53,6 @@ app.UseSwaggerUI(options =>
         options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
     }
 });
-
 app.UseRouting();
 app.UseHttpsRedirection();
 app.UseAuthentication();
@@ -53,3 +60,29 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+void ConfigureLocalization(WebApplication app)
+{
+    var arCulture = new CultureInfo("ar")
+    {
+        NumberFormat =
+        {
+            DigitSubstitution = DigitShapes.NativeNational,
+            NumberDecimalSeparator = "."
+        },
+        DateTimeFormat =
+        {
+            AMDesignator = "AM",
+            PMDesignator = "PM"
+        }
+    };
+
+    var supportedCultures = new[] { arCulture, new CultureInfo("en") };
+
+    app.UseRequestLocalization(new RequestLocalizationOptions
+    {
+        DefaultRequestCulture = new RequestCulture("ar"),
+        SupportedCultures = supportedCultures,
+        SupportedUICultures = supportedCultures
+    });
+}

@@ -1,4 +1,7 @@
 using FluentValidation;
+using TaskManager.Application.Common.Types;
+using TaskManager.Application.Common.Localizations;
+using TaskManager.Application.Common.Extensions;
 
 namespace TaskManager.Application.Feature.Projects.Commands.CreateProject
 {
@@ -7,14 +10,16 @@ namespace TaskManager.Application.Feature.Projects.Commands.CreateProject
         public CreateProjectValidtor()
         {
             RuleFor(x => x.Name)
-                .NotEmpty().WithMessage("Project name is required.")
-                .MaximumLength(100).WithMessage("Project name cannot exceed 100 characters.");
+                .NotEmpty().WithMessage(ResultMessage.Required)
+                .MustContainArabicLocalization(ResultMessage.ArabicLanguageRequired);
+            RuleForEach(x => x.Name).SetValidator(new LocalizationDtoValidator());
 
             RuleFor(x => x.Description)
-                .MaximumLength(500).WithMessage("Description cannot exceed 500 characters.");
+                .NotEmpty().WithMessage(ResultMessage.Required);
+            RuleForEach(x => x.Description).SetValidator(new LocalizationDtoValidator());
 
             RuleFor(x => x.UserId)
-                .GreaterThan(0).WithMessage("Invalid creator user ID.");
+                .GreaterThan(0).WithMessage(ResultMessage.GreaterThan);
         }
     }
 }

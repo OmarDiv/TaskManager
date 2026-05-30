@@ -1,18 +1,14 @@
-using FluentValidation;
-using MediatR;
-using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using TaskManager.Application.Common.Interfaces.Persistence;
 using TaskManager.Application.Common.Interfaces.Repositories;
 using TaskManager.Application.Common.Interfaces.Services;
 using TaskManager.Application.Common.Types;
-using TaskManager.Application.Feature.Projects.Errors;
+using TaskManager.Application.Common.Localizations;
 using TaskManager.Application.Feature.Projects.Responses;
-using TaskManager.Domain.Entities;
 
 namespace TaskManager.Application.Feature.Projects.Commands.UpdateProject
 {
-    public record UpdateProject(long Id = 0, string Name = "", string Description = "", long UserId = 0) : IRequest<Result<ProjectResponse>>;
+    public record UpdateProject(long Id, List<LocalizationDto> Name, List<LocalizationDto> Description, long UserId) : IRequest<Result<ProjectResponse>>;
 
     public class UpdateProjectHandler(
         IGenericRepository<Project> _projectRepository,
@@ -22,34 +18,39 @@ namespace TaskManager.Application.Feature.Projects.Commands.UpdateProject
     {
         public async Task<Result<ProjectResponse>> Handle(UpdateProject request, CancellationToken cancellationToken)
         {
-            var project = await _projectRepository.GetByIdAsync(request.Id, cancellationToken);
+            var project = await _projectRepository.AsQueryable()
+                .Include(p => p.NameSet).ThenInclude(ns => ns.Localization)
+                .Include(p => p.DescriptionSet).ThenInclude(ds => ds.Localization)
+                .FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken);
+                
             if (project == null)
             {
-                return Result.Failure<ProjectResponse>(ProjectErrors.NotFound);
+                return ResultMessage.ProjectNotFound;
             }
 
             // Ownership check
             if (project.CreatedById != request.UserId)
             {
-                return Result.Failure<ProjectResponse>(ProjectErrors.UnauthorizedAccess);
+                return ResultMessage.ProjectUnauthorizedAccess;
             }
 
             // Check duplicate name (excluding this project)
+            var requestNames = request.Name.Select(x => (x.Value ?? "").ToLower()).ToList();
             var exists = await _projectRepository.IsExist(
-                p => p.CreatedById == request.UserId && p.Id != request.Id,
+                p => p.CreatedById == request.UserId && p.Id != request.Id && p.NameSet.Localization.Any(l => requestNames.Contains(l.Value.ToLower())),
                 cancellationToken
             );
 
             if (exists)
             {
-                return Result.Failure<ProjectResponse>(ProjectErrors.DuplicateName);
+                return ResultMessage.ProjectDuplicateName;
             }
 
-            //project.Name = request.Name;
-            //project.Description = request.Description;
+            request.Adapt(project);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-            await _cacheService.RemoveAsync($"projects-user-{request.UserId}", cancellationToken);
+            await _cacheService.RemoveByPrefixAsync($"project-{request.Id}-", cancellationToken);
+            await _cacheService.RemoveByPrefixAsync($"projects-{request.UserId}-", cancellationToken);
 
             var response = project.Adapt<ProjectResponse>();
 
