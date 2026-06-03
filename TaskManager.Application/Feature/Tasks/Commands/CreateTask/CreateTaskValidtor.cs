@@ -1,4 +1,7 @@
 using FluentValidation;
+using TaskManager.Application.Common.Types;
+using TaskManager.Application.Common.Localizations;
+using TaskManager.Application.Common.Extensions;
 
 namespace TaskManager.Application.Feature.Tasks.Commands.CreateTask
 {
@@ -7,11 +10,13 @@ namespace TaskManager.Application.Feature.Tasks.Commands.CreateTask
         public CreateTaskValidtor()
         {
             RuleFor(x => x.Title)
-                .NotEmpty().WithMessage("Task title is required.")
-                .MaximumLength(150).WithMessage("Task title cannot exceed 150 characters.");
+                .NotEmpty().WithMessage(ResultMessage.Required)
+                .MustContainArabicLocalization(ResultMessage.ArabicLanguageRequired);
+            RuleForEach(x => x.Title).SetValidator(new LocalizationDtoValidator());
 
             RuleFor(x => x.Description)
-                .MaximumLength(1000).WithMessage("Description cannot exceed 1000 characters.");
+                .NotEmpty().WithMessage(ResultMessage.Required);
+            RuleForEach(x => x.Description).SetValidator(new LocalizationDtoValidator());
 
             RuleFor(x => x.Status)
                 .IsInEnum().WithMessage("Invalid task status.");

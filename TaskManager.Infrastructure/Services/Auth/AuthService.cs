@@ -9,7 +9,6 @@ using System.Text;
 using TaskManager.Application.Common.Authentication;
 using TaskManager.Application.Common.Interfaces.Persistence;
 using TaskManager.Application.Common.Types;
-using TaskManager.Application.Feature.Auth.Errors;
 using TaskManager.Application.Feature.Auth.Responses;
 using TaskManager.Application.Feature.Auth.Services;
 using TaskManager.Application.Feature.Users.Commands.RegisterUser;
@@ -31,7 +30,7 @@ namespace TaskManager.Infrastructure.Services.Auth
         public async Task<Result<AuthResponse>> GetTokenAsync(string email, string password, CancellationToken cancellationToken = default)
         {
             if (await _userManager.FindByEmailAsync(email) is not { } user)
-                return Result.Failure<AuthResponse>(UserErrors.InvalidCredentials);
+                return ResultMessage.UserNotFound;
 
             var result = await _signInManager.PasswordSignInAsync(user, password, false, false);
             if (result.Succeeded)
@@ -47,7 +46,7 @@ namespace TaskManager.Infrastructure.Services.Auth
                 });
                 var isUpdated = await _userManager.UpdateAsync(user);
                 if (!isUpdated.Succeeded)
-                    return Result.Failure<AuthResponse>(UserErrors.FailedToUpdateUser);
+                    return ResultMessage.FailedToUpdateUser;
                 return Result.Success(new AuthResponse(
                     user.Id,
                     user.Email,
@@ -58,17 +57,17 @@ namespace TaskManager.Infrastructure.Services.Auth
                     refreshToken,
                    refreshTokenExpiration));
             }
-            return Result.Failure<AuthResponse>(result.IsNotAllowed ? UserErrors.EmailNotConfirmed : UserErrors.InvalidCredentials);
+            return ResultMessage.InvalidCredentials;
         }
 
         public async Task<Result<AuthResponse>> GetRefreshTokenAsync(string token, string refreshToken, CancellationToken cancellationToken = default)
         {
             if (_jwtProvider.ValidateToken(token) is not long userId)
-                return Result.Failure<AuthResponse>(UserErrors.InvalidUserOrRefershToken);
+                return ResultMessage.InvalidUserOrRefreshToken;
             if (await _userManager.FindByIdAsync(userId.ToString()) is not { } user)
-                return Result.Failure<AuthResponse>(UserErrors.InvalidUserOrRefershToken);
+                return ResultMessage.InvalidUserOrRefreshToken;
             if (user.RefreshTokens.SingleOrDefault(rt => rt.Token == refreshToken && rt.IsActive) is not { } oldRefreshToken)
-                return Result.Failure<AuthResponse>(UserErrors.InvalidUserOrRefershToken);
+                return ResultMessage.InvalidUserOrRefreshToken;
             oldRefreshToken.RevokedOn = DateTime.UtcNow;
             var (userRoles, userPermissions) = await GetUserRolesAndPermissionsAsync(user);
             (string newToken, int expiresIn) = _jwtProvider.GenerateToken(user, userRoles, userPermissions);
@@ -81,7 +80,7 @@ namespace TaskManager.Infrastructure.Services.Auth
             });
             var isUpdated = await _userManager.UpdateAsync(user);
             if (!isUpdated.Succeeded)
-                return Result.Failure<AuthResponse>(UserErrors.FailedToUpdateUser);
+                return ResultMessage.FailedToUpdateUser;
             return Result.Success(new AuthResponse(
                 user.Id,
                 user.Email,
@@ -113,22 +112,22 @@ namespace TaskManager.Infrastructure.Services.Auth
         public async Task<Result> RevokeRefreshTokenAsync(string token, string refreshToken, CancellationToken cancellationToken = default)
         {
             if (_jwtProvider.ValidateToken(token) is not long userId)
-                return Result.Failure(UserErrors.InvalidUserOrRefershToken);
+                return ResultMessage.InvalidUserOrRefreshToken;
             if (await _userManager.FindByIdAsync(userId.ToString()) is not { } user)
-                return Result.Failure(UserErrors.InvalidUserOrRefershToken);
+                return ResultMessage.InvalidUserOrRefreshToken;
             if (user.RefreshTokens.SingleOrDefault(rt => rt.Token == refreshToken && rt.IsActive) is not { } oldRefreshToken)
-                return Result.Failure(UserErrors.InvalidUserOrRefershToken);
+                return ResultMessage.InvalidUserOrRefreshToken;
             oldRefreshToken.RevokedOn = DateTime.UtcNow;
             var isUpdated = await _userManager.UpdateAsync(user);
             if (!isUpdated.Succeeded)
-                return Result.Failure(UserErrors.FailedToUpdateUser);
+                return ResultMessage.FailedToUpdateUser;
             return Result.Success();
         }
 
         public async Task<Result> RegisterUserAsync(RegisterUser request, CancellationToken cancellationToken)
         {
             if ((await _userManager.Users.AnyAsync(x => x.Email == request.Email)))
-                return Result.Failure(UserErrors.DuplicatedEmail);
+                return ResultMessage.DuplicatedEmail;
 
             var user = new ApplicationUser
             {
@@ -146,7 +145,7 @@ namespace TaskManager.Infrastructure.Services.Auth
                 return Result.Success();
             }
             var error = result.Errors.First();
-            return Result.Failure(new(error.Code, error.Description, StatusCodes.Status400BadRequest));
+            return new ResultMessage(string.Join(",", result.Errors.Select(er=>er.Description)));
         }
     }
 }

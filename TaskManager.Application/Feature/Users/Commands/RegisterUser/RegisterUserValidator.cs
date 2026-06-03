@@ -1,5 +1,6 @@
 using FluentValidation;
 using TaskManager.Application.Common.Const;
+using TaskManager.Application.Common.Types;
 
 namespace TaskManager.Application.Feature.Users.Commands.RegisterUser
 {
@@ -8,21 +9,22 @@ namespace TaskManager.Application.Feature.Users.Commands.RegisterUser
         public RegisterUserValidator()
         {
             RuleFor(x => x.Email)
-                .EmailAddress()
-                .NotEmpty();
+                .NotEmpty().WithMessage(ResultMessage.Required)
+                .EmailAddress().WithMessage(ResultMessage.InvalidEmail);
 
             RuleFor(x => x.Password)
-                .NotEmpty()
+                .NotEmpty().WithMessage(ResultMessage.Required)
                 .Matches(RegexPatterns.Password)
-               .WithMessage("Password should be at least 8 digits and should contains Lowercase, NonAlphanumeric and Uppercase");
+                .WithMessage(ResultMessage.PasswordComplexity);
 
             RuleFor(x => x.FirstName)
-                .NotEmpty();
+                .NotEmpty().WithMessage(ResultMessage.Required);
 
             RuleFor(x => x.LastName)
-                .NotEmpty();
+                .NotEmpty().WithMessage(ResultMessage.Required);
+                
             RuleFor(x => x.Gender)
-                .NotEmpty();
+                .NotEmpty().WithMessage(ResultMessage.Required);
         }
     }
 }

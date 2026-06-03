@@ -1,14 +1,17 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Localization;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TaskManager.Application.Common.Authentication;
 using TaskManager.Application.Common.Interfaces.Persistence;
 using TaskManager.Application.Common.Interfaces.Repositories;
 using TaskManager.Application.Common.Interfaces.Services;
+using TaskManager.Application.Common.Localizations;
 using TaskManager.Application.Feature.Auth.Services;
 using TaskManager.Application.Feature.Roles.Services;
 using TaskManager.Domain.Entities;
@@ -40,7 +43,9 @@ namespace TaskManager.Infrastructure
             {
                 services.AddDistributedMemoryCache();
             }
-
+            services.AddSingleton<IStringLocalizer>(sp =>
+    new JsonStringLocalizer(
+        sp.GetRequiredService<IDistributedCache>()));
 
             services.AddScoped<IApplicationDbContext>(provider =>
                            provider.GetRequiredService<ApplicationDbContext>());

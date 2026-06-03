@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using TaskManager.Application.Common.Authentication;
 using TaskManager.Application.Common.Types;
 using TaskManager.Application.Feature.Roles.Commands.AddRole;
-using TaskManager.Application.Feature.Roles.Errors;
 using TaskManager.Application.Feature.Roles.Responses;
 using TaskManager.Application.Feature.Roles.Services;
 using TaskManager.Domain.Entities;
@@ -28,7 +27,7 @@ namespace TaskManager.Infrastructure.Services.Role
         {
 
             if (await _roleManager.FindByIdAsync(roleId.ToString()) is not { } role)
-                return Result.Failure<RoleDetailResponse>(RoleErrors.NotFound);
+                return ResultMessage.RoleNotFound;
             var permissions = await _roleManager.GetClaimsAsync(role);
             var response = new RoleDetailResponse(role.Id, role.Name!, role.IsDeleted, permissions.Select(clam => clam.Value));
 
@@ -39,11 +38,11 @@ namespace TaskManager.Infrastructure.Services.Role
         {
             var roleExists = await _roleManager.RoleExistsAsync(name);
             if (roleExists)
-                return Result.Failure<RoleDetailResponse>(RoleErrors.RoleAlreadyExists);
+                return ResultMessage.RoleAlreadyExists;
             var allowedpermissions = Permissions.GetAllPermissions();
 
             if (permissions.Except(allowedpermissions).Any())
-                return Result.Failure<RoleDetailResponse>(RoleErrors.InvalidPermissions);
+                return ResultMessage.InvalidPermissions;
 
             var role = new ApplicationRole
             {
@@ -68,22 +67,22 @@ namespace TaskManager.Infrastructure.Services.Role
             }
 
             var errors = result.Errors.First();
-            return Result.Failure<RoleDetailResponse>(new Error(errors.Code, errors.Description, StatusCodes.Status400BadRequest));
+            return new ResultMessage(errors.Code, [errors.Description]);
         }
 
         public async Task<Result> UpdateRoleAsync(long id, string name, IList<string> permissions, CancellationToken cancellation = default)
         {
             if (await _roleManager.FindByIdAsync(id.ToString()) is not { } role)
-                return Result.Failure<RoleDetailResponse>(RoleErrors.NotFound);
+                return ResultMessage.RoleNotFound;
 
             var roleExists = await _roleManager.Roles.AnyAsync(r => r.Name == name && r.Id != id);
             if (roleExists)
-                return Result.Failure<RoleDetailResponse>(RoleErrors.RoleAlreadyExists);
+                return ResultMessage.RoleAlreadyExists;
 
             var allowedpermissions = Permissions.GetAllPermissions();
 
             if (permissions.Except(allowedpermissions).Any())
-                return Result.Failure<RoleDetailResponse>(RoleErrors.InvalidPermissions);
+                return ResultMessage.InvalidPermissions;
 
             role.Name = name;
             var result = await _roleManager.UpdateAsync(role);
@@ -115,13 +114,13 @@ namespace TaskManager.Infrastructure.Services.Role
             }
 
             var errors = result.Errors.First();
-            return Result.Failure(new Error(errors.Code, errors.Description, StatusCodes.Status400BadRequest));
+            return new ResultMessage(errors.Code, [errors.Description]);
         }
 
         public async Task<Result> ToggleStatusAsync(long id)
         {
             if (await _roleManager.FindByIdAsync(id.ToString()) is not { } role)
-                return Result.Failure<RoleDetailResponse>(RoleErrors.NotFound);
+                return ResultMessage.RoleNotFound;
             role.IsDeleted = !role.IsDeleted;
             await _roleManager.UpdateAsync(role);
             return Result.Success();

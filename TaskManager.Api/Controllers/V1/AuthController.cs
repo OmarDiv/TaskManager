@@ -7,7 +7,6 @@ using TaskManager.Application.Feature.Auth.Commands.GetRefreshToken;
 using TaskManager.Application.Feature.Auth.Commands.RevokeRefreshToken;
 using TaskManager.Application.Feature.Auth.Responses;
 using TaskManager.Application.Feature.Users.Commands.RegisterUser;
-using TaskManager.Api.Extention;
 
 namespace TaskManager.Api.Controllers.V1
 {
@@ -20,34 +19,30 @@ namespace TaskManager.Api.Controllers.V1
 
         [HttpPost("Register")]
         [MapToApiVersion("1.0")]
-        public async Task<ActionResult> Register([FromBody] RegisterUser request, CancellationToken cancellationToken)
+        public async Task<Result> Register([FromBody] RegisterUser request, CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(request, cancellationToken);
-            return result.AsNoContentResult();
+            return await _mediator.Send(request, cancellationToken);
         }
 
         [HttpPost("Login")]
         [MapToApiVersion("1.0")]
-        public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginUser request, CancellationToken cancellationToken)
+        public async Task<Result<AuthResponse>> Login([FromBody] LoginUser request, CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(request, cancellationToken);
-            return result.AsActionResult();
+            return await _mediator.Send(request, cancellationToken);
         }
 
         [HttpPost("Refresh")]
         [MapToApiVersion("1.0")]
-        public async Task<ActionResult<AuthResponse>> RefreshToken([FromBody] GetRefrshToken request, CancellationToken cancellationToken)
+        public async Task<Result<AuthResponse>> RefreshToken([FromBody] GetRefrshToken request, CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(request, cancellationToken);
-            return result.AsActionResult();
+            return await _mediator.Send(request, cancellationToken);
         }
 
         [HttpPost("Revoke")]
         [MapToApiVersion("1.0")]
-        public async Task<ActionResult<Result>> RevokeRefreshToken([FromBody] RevokeRefreshToken request, CancellationToken cancellationToken)
+        public async Task<Result> RevokeRefreshToken([FromBody] RevokeRefreshToken request, CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(request, cancellationToken);
-            return result.AsNoContentResult();
+            return await _mediator.Send(request, cancellationToken);
         }
     }
 }

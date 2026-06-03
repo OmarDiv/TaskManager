@@ -1,10 +1,13 @@
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Extensions;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using TaskManager.Api.Errors;
+using TaskManager.Api.Extention;
+using TaskManager.Application.Common.Types;
 
 namespace TaskManager.Api
 {
@@ -12,7 +15,10 @@ namespace TaskManager.Api
     {
         public static IServiceCollection AddPresentation(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddControllers();
+            services.AddControllers(options =>
+            {
+                options.Filters.Add<ResultFilter>();
+            });
             services.AddCors(options =>
             {
                 options.AddDefaultPolicy(builder =>
@@ -21,7 +27,6 @@ namespace TaskManager.Api
                 .AllowAnyHeader()
                 .WithOrigins(configuration.GetSection("AllowedOrigins").Get<string[]>()!));
             });
-            services.AddExceptionHandler<GlobalExceptionHandler>();
 
             services.AddApiVersioning(options =>
             {
@@ -41,6 +46,7 @@ namespace TaskManager.Api
             services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
             services.AddSwaggerGen(options =>
             {
+                options.OperationFilter<LanguageHeaderOperationFilter>();
                 var securityScheme = new OpenApiSecurityScheme
                 {
                     Name = "Authorization",
@@ -52,7 +58,7 @@ namespace TaskManager.Api
                 };
 
                 options.AddSecurityDefinition("Bearer", securityScheme);
-                
+
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {

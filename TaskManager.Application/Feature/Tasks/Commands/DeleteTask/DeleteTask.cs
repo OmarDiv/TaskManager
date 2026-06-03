@@ -6,7 +6,6 @@ using TaskManager.Application.Common.Interfaces.Persistence;
 using TaskManager.Application.Common.Interfaces.Repositories;
 using TaskManager.Application.Common.Interfaces.Services;
 using TaskManager.Application.Common.Types;
-using TaskManager.Application.Feature.Tasks.Errors;
 using TaskManager.Domain.Entities;
 
 namespace TaskManager.Application.Feature.Tasks.Commands.DeleteTask
@@ -29,19 +28,19 @@ namespace TaskManager.Application.Feature.Tasks.Commands.DeleteTask
 
             if (task == null)
             {
-                return Result.Failure(TaskErrors.NotFound);
+                return ResultMessage.TaskNotFound;
             }
 
             if (task.Project.CreatedById != request.UserId)
             {
-                return Result.Failure(TaskErrors.UnauthorizedAccess);
+                return ResultMessage.TaskUnauthorizedAccess;
             }
 
             await _taskRepository.DeleteAsync(task, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             // Invalidate Caches
-            await _cacheService.RemoveAsync($"project-tasks-{task.ProjectId}", cancellationToken);
+            await _cacheService.RemoveByPrefixAsync($"project-tasks-{task.ProjectId}-", cancellationToken);
 
             return Result.Success();
         }

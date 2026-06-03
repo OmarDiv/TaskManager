@@ -1,22 +1,25 @@
 using FluentValidation;
 using MediatR;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TaskManager.Application.Common.Interfaces.Persistence;
 using TaskManager.Application.Common.Interfaces.Repositories;
 using TaskManager.Application.Common.Interfaces.Services;
+using TaskManager.Application.Common.Localizations;
 using TaskManager.Application.Common.Types;
-using TaskManager.Application.Feature.Projects.Errors;
 using TaskManager.Application.Feature.Tasks.Responses;
 using TaskManager.Domain.Entities;
+using TaskManager.Domain.Entities.Common;
 using TaskManager.Domain.Enums;
 
 namespace TaskManager.Application.Feature.Tasks.Commands.CreateTask
 {
     public record CreateTask(
-        string Title,
-        string Description,
+        List<LocalizationDto> Title,
+        List<LocalizationDto> Description,
         Status Status,
         DateTime? DueDate,
         Priority Priority,
@@ -37,29 +40,21 @@ namespace TaskManager.Application.Feature.Tasks.Commands.CreateTask
             var project = await _projectRepository.GetByIdAsync(request.ProjectId, cancellationToken);
             if (project == null)
             {
-                return Result.Failure<TaskResponse>(ProjectErrors.NotFound);
+                return ResultMessage.ProjectNotFound;
             }
 
             if (project.CreatedById != request.UserId)
             {
-                return Result.Failure<TaskResponse>(ProjectErrors.UnauthorizedAccess);
+                return ResultMessage.ProjectUnauthorizedAccess;
             }
 
-            var task = new ProjectTask
-            {
-                //Title = request.Title,
-                //Description = request.Description,
-                Status = request.Status,
-                DueDate = request.DueDate,
-                Priority = request.Priority,
-                ProjectId = request.ProjectId
-            };
+            var task = request.Adapt<ProjectTask>();
 
             await _taskRepository.AddAsync(task, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             // Invalidate Caches
-            await _cacheService.RemoveAsync($"project-tasks-{request.ProjectId}", cancellationToken);
+            await _cacheService.RemoveByPrefixAsync($"project-tasks-{request.ProjectId}-", cancellationToken);
 
             var response = task.Adapt<TaskResponse>();
 

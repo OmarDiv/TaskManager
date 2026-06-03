@@ -5,7 +5,6 @@ using TaskManager.Application.Common.Interfaces.Persistence;
 using TaskManager.Application.Common.Interfaces.Repositories;
 using TaskManager.Application.Common.Interfaces.Services;
 using TaskManager.Application.Common.Types;
-using TaskManager.Application.Feature.Projects.Errors;
 using TaskManager.Domain.Entities;
 
 namespace TaskManager.Application.Feature.Projects.Commands.DeleteProject
@@ -23,21 +22,21 @@ namespace TaskManager.Application.Feature.Projects.Commands.DeleteProject
             var project = await _projectRepository.GetByIdAsync(request.Id, cancellationToken);
             if (project == null)
             {
-                return Result.Failure(ProjectErrors.NotFound);
+                return ResultMessage.ProjectNotFound;
             }
 
             if (project.CreatedById != request.UserId)
             {
-                return Result.Failure(ProjectErrors.UnauthorizedAccess);
+                return ResultMessage.ProjectUnauthorizedAccess;
             }
 
             await _projectRepository.DeleteAsync(project, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             // Invalidate Caches
-            await _cacheService.RemoveAsync($"projects-user-{request.UserId}", cancellationToken);
-            await _cacheService.RemoveAsync($"project-{request.Id}", cancellationToken);
-            await _cacheService.RemoveAsync($"project-tasks-{request.Id}", cancellationToken);
+            await _cacheService.RemoveByPrefixAsync($"projects-{request.UserId}-", cancellationToken);
+            await _cacheService.RemoveByPrefixAsync($"project-{request.Id}-", cancellationToken);
+            await _cacheService.RemoveByPrefixAsync($"project-tasks-{request.Id}-", cancellationToken);
 
             return Result.Success();
         }

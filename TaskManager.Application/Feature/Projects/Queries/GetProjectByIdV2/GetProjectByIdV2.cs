@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using TaskManager.Application.Common.Interfaces.Repositories;
 using TaskManager.Application.Common.Types;
-using TaskManager.Application.Feature.Projects.Errors;
 using TaskManager.Application.Feature.Projects.Responses;
 using TaskManager.Domain.Entities;
 
@@ -27,7 +26,7 @@ namespace TaskManager.Application.Feature.Projects.Queries.GetProjectByIdV2
 
             if (project == null || project.CreatedById != request.UserId)
             {
-                return Result.Failure<ProjectResponseV2>(ProjectErrors.NotFound);
+                return ResultMessage.ProjectNotFound;
             }
             ProjectResponseV2? response = default;
             //var response = new ProjectResponseV2(
