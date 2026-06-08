@@ -40,6 +40,7 @@ public class Result
         }
     }
 
+
     public static Result Success() => new(true, ResultMessage.OperationSuccessfully);
     public static Result<T> Success<T>(T value) => Result<T>.Success(value);
     public static Result Failure(ResultMessage resultMessage) => new(false, resultMessage, ResultType.BadRequest);
@@ -59,7 +60,8 @@ public class Result<T> : Result
     }
 
     public T? Data { get; private set; }
-
+    public static Result<T> ValidationFailure(ResultMessage message)
+    => new(false, message, default, ResultType.BadRequest);
     public static Result<T> Success(T value) => new(true, ResultMessage.OperationSuccessfully, value);
     public static new Result<T> Failure(ResultMessage resultMessage) => new(false, resultMessage, default, ResultType.BadRequest);
     public static new Result<T> NotFound(ResultMessage resultMessage) => new(false, resultMessage, default, ResultType.NotFound);

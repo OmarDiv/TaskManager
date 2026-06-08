@@ -30,7 +30,7 @@ namespace TaskManager.Infrastructure.Services.Auth
         public async Task<Result<AuthResponse>> GetTokenAsync(string email, string password, CancellationToken cancellationToken = default)
         {
             if (await _userManager.FindByEmailAsync(email) is not { } user)
-                return ResultMessage.UserNotFound;
+                return ResultMessage.InvalidCredentials;
 
             var result = await _signInManager.PasswordSignInAsync(user, password, false, false);
             if (result.Succeeded)

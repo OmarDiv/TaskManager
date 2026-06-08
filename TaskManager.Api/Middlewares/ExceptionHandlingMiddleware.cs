@@ -50,6 +50,7 @@ namespace TaskManager.Api.Middlewares
 
             return exception switch
             {
+                ValidationException validationException => HandleValidationException(response, validationException),
                 NotFoundException notFoundException => HandleException(response, HttpStatusCode.NotFound, notFoundException.Message, nameof(NotFoundException)),
                 SaveChangesException saveChangesException => HandleSaveChangesException(response, saveChangesException),
                 UnauthorizedAccessException unauthorizedAccessException => HandleException(response, HttpStatusCode.Unauthorized, _stringLocalizer[unauthorizedAccessException.Message], nameof(UnauthorizedAccessException)),
@@ -179,7 +180,38 @@ namespace TaskManager.Api.Middlewares
             _logger.LogWarning("Could not extract column name from NULL violation message: {ErrorMessage}", errorMessage);
             return "Unknown column or table for NULL violation.";
         }
+        private Task HandleValidationException(HttpResponse response, ValidationException exception)
+        {
+            _logger.LogWarning("ValidationException occurred with {ErrorCount} errors", exception.Errors.Count());
 
+            response.StatusCode = (int)HttpStatusCode.BadRequest;
+
+            var localizedErrors = exception.Errors
+                         .Select(error =>
+                         {
+                             var message = _stringLocalizer[error.ErrorMessage].Value;
+
+                             var propertyName =
+                                 _stringLocalizer[error.PropertyName].Value
+                                 ?? error.PropertyName;
+
+         return message.Replace("{PropertyName}", propertyName);
+     }).Distinct()
+     .ToList();
+            var combinedMessage = string.Join(" | ", localizedErrors);
+
+            var serializerSettings = new JsonSerializerSettings
+            {
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            };
+
+            var result = JsonConvert.SerializeObject(Result.Failure(new ResultMessage(combinedMessage)), serializerSettings);
+
+            _logger.LogInformation("Returning 400 response for ValidationException");
+            _logger.LogDebug("Serialized validation error response: {Response}", result);
+
+            return response.WriteAsync(result);
+        }
         private Task HandleInvalidOperationException(HttpResponse response, InvalidOperationException exception)
         {
             _logger.LogWarning("InvalidOperationException occurred: {Message}", exception.Message);

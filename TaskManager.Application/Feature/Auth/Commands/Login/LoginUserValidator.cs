@@ -1,5 +1,6 @@
 using FluentValidation;
 using TaskManager.Application.Common.Const;
+using TaskManager.Application.Common.Extensions;
 
 namespace TaskManager.Application.Feature.Auth.Commands.Login
 {
@@ -8,14 +9,12 @@ namespace TaskManager.Application.Feature.Auth.Commands.Login
         public LoginUserValidator()
         {
             RuleFor(x => x.Email)
-                .NotEmpty()
-                .WithMessage(ResultMessage.Required)
+                .NotEmptyWithMessage(ResultMessage.Required)
                 .EmailAddress()
                 .WithMessage(ResultMessage.InvalidEmail);
 
             RuleFor(x => x.Password)
-               .NotEmpty()
-               .WithMessage(ResultMessage.Required)
+               .NotEmptyWithMessage(ResultMessage.Required)
                .Matches(RegexPatterns.Password)
                .WithMessage(ResultMessage.PasswordComplexity);
         }

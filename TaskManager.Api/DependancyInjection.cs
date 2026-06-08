@@ -7,6 +7,7 @@ using Microsoft.OpenApi.Extensions;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using TaskManager.Api.Extention;
+using TaskManager.Api.Filters.Swagger;
 using TaskManager.Application.Common.Types;
 
 namespace TaskManager.Api
@@ -18,6 +19,11 @@ namespace TaskManager.Api
             services.AddControllers(options =>
             {
                 options.Filters.Add<ResultFilter>();
+            })
+            .ConfigureApiBehaviorOptions(options =>
+            {
+                // Disable the default automatic 400 response so we can handle it ourselves
+                options.SuppressModelStateInvalidFilter = true;
             });
             services.AddCors(options =>
             {

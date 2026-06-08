@@ -4,7 +4,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using TaskManager.Application.Common.Authentication;
-using TaskManager.Application.Common.Behaviors;
 using TaskManager.Application.Common.Localizations;
 
 namespace TaskManager.Application
@@ -25,7 +24,6 @@ namespace TaskManager.Application
                 configuration.RegisterServicesFromAssembly(assembly));
             services.AddValidatorsFromAssembly(assembly);
             services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
-            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LocalizationBehavior<,>));
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
             return services;

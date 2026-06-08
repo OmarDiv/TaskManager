@@ -1,16 +1,21 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Localization;
 using System.Net;
 using TaskManager.Application.Common.Types;
 
 namespace TaskManager.Api.Extention;
 
-public class ResultFilter : IAsyncResultFilter
+public class ResultFilter(IStringLocalizer _localizer) : IAsyncResultFilter
 {
     public async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
     {
         if (context.Result is ObjectResult objectResult && objectResult.Value is Result result)
+        {
+            result.LocalizeMessage(_localizer);
             context.HttpContext.Response.StatusCode = (int)result.Type;
+        }
+
         await next();
     }
 }

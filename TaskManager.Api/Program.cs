@@ -19,6 +19,7 @@ builder.Services
 
 var app = builder.Build();
 
+// UseRequestLocalization FIRST!
 ConfigureLocalization(app);
 
 
@@ -79,10 +80,16 @@ void ConfigureLocalization(WebApplication app)
 
     var supportedCultures = new[] { arCulture, new CultureInfo("en") };
 
-    app.UseRequestLocalization(new RequestLocalizationOptions
+    var options = new RequestLocalizationOptions
     {
         DefaultRequestCulture = new RequestCulture("ar"),
         SupportedCultures = supportedCultures,
         SupportedUICultures = supportedCultures
-    });
+    };
+
+    // Only use Accept-Language header - ignore query string and cookies!
+    options.RequestCultureProviders.Clear();
+    options.RequestCultureProviders.Add(new AcceptLanguageHeaderRequestCultureProvider());
+
+    app.UseRequestLocalization(options);
 }
