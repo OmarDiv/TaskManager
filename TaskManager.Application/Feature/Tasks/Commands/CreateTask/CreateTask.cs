@@ -28,7 +28,6 @@ namespace TaskManager.Application.Feature.Tasks.Commands.CreateTask
     ) : IRequest<Result<TaskResponse>>;
 
     public class CreateTaskHandler(
-        IGenericRepository<Project> _projectRepository,
         IGenericRepository<ProjectTask> _taskRepository,
         IUnitOfWork _unitOfWork,
         ICacheService _cacheService
@@ -36,18 +35,6 @@ namespace TaskManager.Application.Feature.Tasks.Commands.CreateTask
     {
         public async Task<Result<TaskResponse>> Handle(CreateTask request, CancellationToken cancellationToken)
         {
-            // Verify project exists and belongs to the current user
-            var project = await _projectRepository.GetByIdAsync(request.ProjectId, cancellationToken);
-            if (project == null)
-            {
-                return ResultMessage.ProjectNotFound;
-            }
-
-            if (project.CreatedById != request.UserId)
-            {
-                return ResultMessage.ProjectUnauthorizedAccess;
-            }
-
             var task = request.Adapt<ProjectTask>();
 
             await _taskRepository.AddAsync(task, cancellationToken);

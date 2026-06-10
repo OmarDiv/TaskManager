@@ -42,22 +42,12 @@ namespace TaskManager.Application.Feature.Tasks.Commands.UpdateTask
                 .Include(t => t.DescriptionSet).ThenInclude(ds => ds.Localization)
                 .FirstOrDefaultAsync(t => t.Id == request.Id, cancellationToken);
 
-            if (task == null)
-            {
-                return ResultMessage.TaskNotFound;
-            }
-
-            if (task.Project.CreatedById != request.UserId)
-            {
-                return ResultMessage.TaskUnauthorizedAccess;
-            }
-
-            request.Adapt(task);
+            request.Adapt(task!);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             // Invalidate Caches
-            await _cacheService.RemoveByPrefixAsync($"project-tasks-{task.ProjectId}-", cancellationToken);
+            await _cacheService.RemoveByPrefixAsync($"project-tasks-{task!.ProjectId}-", cancellationToken);
 
             var response = task.Adapt<TaskResponse>();
 

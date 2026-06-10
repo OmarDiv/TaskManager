@@ -17,16 +17,6 @@ namespace TaskManager.Application.Feature.Projects.Commands.CreateProject
     {
         public async Task<Result<ProjectResponse>> Handle(CreateProject request, CancellationToken cancellationToken)
         {
-            var requestNames = request.Name.Select(x => (x.Value ?? "").ToLower()).ToList();
-            var exists = await _projectRepository.IsExist(
-                p => p.CreatedById == request.UserId && p.NameSet.Localization.Any(l => requestNames.Contains(l.Value.ToLower())),
-                cancellationToken
-            );
-            if (exists)
-            {
-                return ResultMessage.ProjectDuplicateName;
-            }
-
             var project = request.Adapt<Project>();
 
             await _projectRepository.AddAsync(project, cancellationToken);

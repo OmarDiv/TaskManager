@@ -22,31 +22,8 @@ namespace TaskManager.Application.Feature.Projects.Commands.UpdateProject
                 .Include(p => p.NameSet).ThenInclude(ns => ns.Localization)
                 .Include(p => p.DescriptionSet).ThenInclude(ds => ds.Localization)
                 .FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken);
-                
-            if (project == null)
-            {
-                return ResultMessage.ProjectNotFound;
-            }
 
-            // Ownership check
-            if (project.CreatedById != request.UserId)
-            {
-                return ResultMessage.ProjectUnauthorizedAccess;
-            }
-
-            // Check duplicate name (excluding this project)
-            var requestNames = request.Name.Select(x => (x.Value ?? "").ToLower()).ToList();
-            var exists = await _projectRepository.IsExist(
-                p => p.CreatedById == request.UserId && p.Id != request.Id && p.NameSet.Localization.Any(l => requestNames.Contains(l.Value.ToLower())),
-                cancellationToken
-            );
-
-            if (exists)
-            {
-                return ResultMessage.ProjectDuplicateName;
-            }
-
-            request.Adapt(project);
+            request.Adapt(project!);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             await _cacheService.RemoveByPrefixAsync($"project-{request.Id}-", cancellationToken);
